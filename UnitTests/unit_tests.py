@@ -14,15 +14,13 @@ class TestPSO(unittest.TestCase):
     def test_shapelet_classifier(self):
         # Define the train dataset of time series
         train_filepath = "D:\\Research\\Datasets\\UCR Time series\\UCR_TS_Archive_2015\\ItalyPowerDemand\\ItalyPowerDemand_TRAIN_2_samples.txt"
-        classifiers_folder = "./Classifiers"
-        shapelet_classifier = ShapeletClassifier(class_index_a=1
-                                                , class_index_b=2
-                                                , dataset_filepath=train_filepath
-                                                , classifiers_folder=classifiers_folder)
+        classifiers_folder = ".\\Classifiers"
+        shapelet_classifier = ShapeletClassifier(dataset_filepath=train_filepath
+                                                 , classifiers_folder=classifiers_folder)
 
-        shapelet = shapelet_classifier.find_shapelet()
+        shapelet_classifier.train_tree([1, 2, 3])
 
-        print(shapelet)
+        tree = shapelet_classifier.load_tree([1, 2, 3])
 
     '''
     def test_pso(self):
