@@ -11,16 +11,35 @@ class TestPSO(unittest.TestCase):
         print(test_pdf.shape)
         print(test_pdf.head().to_string())
 
+    def test_groups(self):
+
+        train_filepath = "D:\\Research\\Datasets\\UCR Time series\\UCR_TS_Archive_2015\\SwedishLeaf\\SwedishLeaf_TRAIN"
+        classifiers_folder = ".\\Classifiers"
+        pattern_length = 80
+        shapelet_classifier = ShapeletClassifier(dataset=from_ucr_txt(train_filepath)
+                                                 , classifiers_folder=classifiers_folder
+                                                 , num_classes_per_tree=2
+                                                 , pattern_length=pattern_length)
+
+        group = shapelet_classifier._create_group()
+        assert pattern_length <= (len(group))
+        print(group)
+
     def test_shapelet_classifier(self):
         # Define the train dataset of time series
-        train_filepath = "D:\\Research\\Datasets\\UCR Time series\\UCR_TS_Archive_2015\\ItalyPowerDemand\\ItalyPowerDemand_TRAIN_2_samples.txt"
+        train_filepath = "D:\\Research\\Datasets\\UCR Time series\\UCR_TS_Archive_2015\\SwedishLeaf\\SwedishLeaf_TRAIN"
         classifiers_folder = ".\\Classifiers"
-        shapelet_classifier = ShapeletClassifier(dataset_filepath=train_filepath
-                                                 , classifiers_folder=classifiers_folder)
+        shapelet_classifier = ShapeletClassifier(dataset=from_ucr_txt(train_filepath)
+                                                 , classifiers_folder=classifiers_folder
+                                                 , num_classes_per_tree=2
+                                                 , pattern_length=80)
 
-        shapelet_classifier.train_tree([1, 2, 3])
+        tree = shapelet_classifier._load_tree([1, 2, 3])
+        assert (tree is None)
+        shapelet_classifier._train_and_save_tree([1, 2, 3])
 
-        tree = shapelet_classifier.load_tree([1, 2, 3])
+        tree = shapelet_classifier._load_tree([1, 2, 3])
+        assert(tree is not None)
 
     '''
     def test_pso(self):

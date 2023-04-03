@@ -1,6 +1,10 @@
 import pandas as pd
 import pickle
 import os
+from collections import Counter
+from itertools import chain
+import numpy as np
+
 from ShapeletDataMining.shapelet import Shapelet
 from PSO.pso import ShapeletsPso
 from Utils.utils import from_ucr_txt, subsequent_distance
@@ -10,17 +14,21 @@ from itertools import combinations, permutations
 
 class ShapeletClassifier:
 
-    def __init__(self, dataset_filepath: str, classifiers_folder: str):
+    def __init__(self
+                 , dataset: pd.DataFrame
+                 , classifiers_folder: str
+                 , num_classes_per_tree: int
+                 , pattern_length: int):
 
-        self.dataset = from_ucr_txt(dataset_filepath)
         self.classifiers_folder = classifiers_folder
-
-        # Take randomly 10 samples from each class index- faster to train and balanced dataset
+        self.num_classes_per_tree = num_classes_per_tree
+        self.pattern_length = pattern_length
+        # Balance training dataset-take 10 samples from each class
         self.balanced_dataset = pd.DataFrame()
-        for i in self.dataset['class_index'].unique():
+        for i in dataset['class_index'].unique():
             self.balanced_dataset = pd.concat([self.balanced_dataset
-                                              , self.dataset.loc[self.dataset['class_index'] == i]
-                                              .sample(5, replace=True)])
+                                                  , dataset.loc[self.dataset['class_index'] == i]
+                                              .sample(10, replace=True)])
         self.balanced_dataset = self.balanced_dataset.reset_index().drop(columns=['index'])
 
     @staticmethod
@@ -52,13 +60,15 @@ class ShapeletClassifier:
     def _find_shapelet(self, class_index_a: int, class_index_b: int) -> Shapelet:
         """ Find shapelet and its parameters such as optimal split distance, left and right class index"""
 
+        train_dataset = self.balanced_dataset[self.balanced_dataset['class_index']
+                                                  .isin([class_index_a, class_index_b])]
         # Start PSO algorithm to find shapelet that separates two classes
         min_length = 3
-        max_length = len(self.balanced_dataset['values'][0])
+        max_length = len(train_dataset['values'][0])
         step = (max_length - min_length)//20
         step = step if step > 0 else 1
-        min_train_value = min(self.balanced_dataset['values'].explode())
-        max_train_value = max(self.balanced_dataset['values'].explode())
+        min_train_value = min(train_dataset['values'].explode())
+        max_train_value = max(train_dataset['values'].explode())
         shapelet_pso = ShapeletsPso(min_length=min_length
                                     , max_length=max_length
                                     , step=step
@@ -66,7 +76,7 @@ class ShapeletClassifier:
                                     , max_position=max_train_value
                                     , min_velocity=min_train_value
                                     , max_velocity=max_train_value
-                                    , train_dataframe=self.balanced_dataset)
+                                    , train_dataframe=train_dataset)
         shapelet_pso.start_pso()
 
         # Fill shapelet parameters- shapelet values, best info gain, optimal split distance
@@ -76,8 +86,8 @@ class ShapeletClassifier:
 
         # TODO: Check if only one call of below function is enough
         # Fill shapelet parameters- left and right class indexes of the shapelet
-        ShapeletClassifier._split_classes(shapelet, class_index_a, self.balanced_dataset[self.balanced_dataset.class_index == class_index_a])
-        ShapeletClassifier._split_classes(shapelet, class_index_b, self.balanced_dataset[self.balanced_dataset.class_index == class_index_b])
+        ShapeletClassifier._split_classes(shapelet, class_index_a, train_dataset[train_dataset.class_index == class_index_a])
+        ShapeletClassifier._split_classes(shapelet, class_index_b, train_dataset[train_dataset.class_index == class_index_b])
 
         return shapelet
 
@@ -174,7 +184,29 @@ class ShapeletClassifier:
 
         return best_tree
 
-    def load_tree(self, classes_in_combination: list) -> BTree:
+    def _create_group(self, class_indexes: list) -> list:
+
+        class_indexes = self.balanced_dataset['class_index'].unique()
+        num_class_indexes = len(class_indexes)
+        num_allowed_indexes = self.pattern_length * self.num_classes_per_tree // num_class_indexes
+
+        # Generate all possible combinations of 3 classes from the range 0-15
+        combs = list(combinations(class_indexes, self.num_classes_per_tree))
+
+        # Filter the combinations to only keep those where each class appears equally
+        valid_combs = []
+        while not valid_combs or any(freq[class_] < num_allowed_indexes for class_ in list(chain(*valid_combs))):
+            for comb in combs:
+                freq = Counter(list(chain(*valid_combs)))
+                if all(freq[class_] < num_allowed_indexes for class_ in comb):
+                    valid_combs.append(comb)
+
+        # Sanity check
+        #print(freq)
+
+        return valid_combs
+
+    def _load_tree(self, classes_in_combination: list) -> BTree:
         """ Deserialize classification tree from disk """
         classifier_file_name = self._get_serialize_name(classes_in_combination)
 
@@ -187,7 +219,7 @@ class ShapeletClassifier:
 
         return serialized_tree
 
-    def train_tree(self, classes_in_combination: list) -> None:
+    def _train_and_save_tree(self, classes_in_combination: list) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""
         shapelets = []
@@ -210,7 +242,30 @@ class ShapeletClassifier:
         # Serialize tree to disk
         self._serialize_tree(best_tree, classes_in_combination)
 
+        return best_tree
 
+    def create_and_train_classifiers(self):
+
+        """ Create, train and save all required classifier for given pattern length"""
+
+        classifiers = []
+
+        # Take possible combination of class indexes based on
+        # num. classes per tree and required pattern length
+        group = self._create_group()
+        print(group)
+
+        for combination in group:
+            # Check if classifier already exists
+            classifier = self._load_tree(combination)
+
+            # Train and save, if not exists
+            if not classifier:
+                classifier = self._train_and_save_tree(combination)
+
+            classifiers.add(classifier)
+
+        return classifiers
 
 
 
