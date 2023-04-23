@@ -1,5 +1,7 @@
 import numpy as np
 from ShapeletDataMining.shapelet import Shapelet
+import pandas as pd
+from Utils.utils import from_ucr_txt, subsequent_distance
 
 
 class BTree:
@@ -14,6 +16,37 @@ class BTree:
     def __init__(self, shapelet):
         self.root = self.Node(shapelet)
         self.accuracy = 0.0
+
+    def build_classification_path(self, time_series: pd.Series) -> str:
+
+        current_node = self.root
+        path_string = ''
+
+        # Iterate the tree
+        while True:
+            if current_node is None:
+                break
+
+            distance = subsequent_distance(time_series["values"], current_node.shapelet.values)
+
+            # Left wing
+            if distance <= current_node.shapelet.optimal_split_distance:
+                path_string += 'L'
+                if current_node.left is not None:
+                    current_node = current_node.left
+                    continue
+                else:
+                    break
+            # Right wing
+            else:
+                path_string += 'R'
+                if current_node.right is not None:
+                    current_node = current_node.right
+                    continue
+                else:
+                    break
+
+        return path_string
 
     def add(self, node: Node, shapelet: Shapelet)->bool:
         """ Add new node to the tree"""

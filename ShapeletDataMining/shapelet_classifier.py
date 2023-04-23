@@ -244,7 +244,7 @@ class ShapeletClassifier:
 
         return best_tree
 
-    def create_and_train_classifiers(self):
+    def create_and_train_classifiers(self) -> list[BTree]:
 
         """ Create, train and save all required classifier for given pattern length"""
 
@@ -266,6 +266,9 @@ class ShapeletClassifier:
             classifiers.add(classifier)
 
         return classifiers
+
+
+
 
 
 

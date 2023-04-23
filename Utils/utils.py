@@ -8,6 +8,14 @@ import pandas as pd
 import csv
 
 
+def similarity_coeff(s1: str, s2: str) -> int:
+    """ Find similarity cieficient beween two strings with equal length"""
+    if len(s1) != len(s2):
+        raise Exception("The patterns have different length!")
+
+    return sum(1 for x, y in zip(s1, s2) if x == y) / len(s1)
+
+
 def entropy(values: list) -> float:
 
     """ Calculates entropy of given sequence"""
