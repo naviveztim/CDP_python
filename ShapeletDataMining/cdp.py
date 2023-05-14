@@ -18,11 +18,12 @@ from itertools import combinations, permutations
 
 class CDP:
 
-    """ Main class in Concatenated Decision Paths (CDP) method implementation"""
+    """ Main class of Concatenated Decision Paths (CDP) method implementation"""
 
     def __init__(self
                  , train_dataset_filepath: str
                  , classifiers_folder: str
+                 , delimiter: str
                  , num_classes_per_tree: int
                  , pattern_length: int
                  , compression_factor: int = None
@@ -35,29 +36,27 @@ class CDP:
         self.compression_factor = compression_factor
         self.original_or_derivate = original_or_derivate
         self.normalize = normalize
-        self.train_dataset = from_ucr_txt(train_dataset_filepath)
+        self.train_dataset = from_ucr_txt(train_dataset_filepath, delimiter)
         self.patterns: list[str] = []
         self.classification_trees: list[BTree] = []
-        self.train_dataset = self.process_dataset(self.train_dataset)
+        self._process_train_dataset()
 
-    def process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
+    def _process_train_dataset(self):
 
-        # Apply averaging on time series values
+        # Apply compression on time series values
         if self.compression_factor:
-            dataset['values'] = dataset['values'].apply(
-                lambda x: pd.Series(x).rolling(window=self.compression_factor, min_periods=1).mean().tolist())
+            self.train_dataset['values'] = self.train_dataset['values'] \
+                .apply(lambda x: pd.Series(x).rolling(window=self.compression_factor, min_periods=1).mean().tolist())
 
-        # Take original or derivative time series values
-        if self.original_or_derivate and (self.original_or_derivate == 'D' or self.original_or_derivate == 'd'):
-            dataset['values'] = dataset['values'] \
+        # Take original/derivative time series values
+        if self.original_or_derivate == 'D' or self.original_or_derivate == 'd':
+            self.train_dataset['values'] = self.train_dataset['values'] \
                 .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
 
         # Apply normalization
         if self.normalize:
-            dataset['values'] = dataset['values'] \
+            self.train_dataset['values'] = self.train_dataset['values'] \
                 .apply(lambda x: [(i - np.mean(x)) / np.std(x) for i in x])
-
-        return dataset
 
     def fit(self):
 
@@ -81,12 +80,12 @@ class CDP:
             self.patterns.append((time_series['class_index']
                                   , ''.join(self.classification_trees.build_classification_path(time_series))))
 
-    def predict(self, test_dataset_filepath: str) -> list[int]:
+    def predict(self, test_dataset_filepath: str, delimiter: str = ',') -> list:
 
         """ Predict indexes of given time series """
 
         # Read test dataset
-        test_dataset = from_ucr_txt(test_dataset_filepath)
+        test_dataset = from_ucr_txt(test_dataset_filepath, delimiter)
 
         # Apply pre-processing, already applied to train dataset
         test_dataset = self.process_dataset(test_dataset)

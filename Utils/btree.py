@@ -1,7 +1,7 @@
 import numpy as np
 from ShapeletDataMining.shapelet import Shapelet
 import pandas as pd
-from Utils.utils import from_ucr_txt, subsequent_distance
+from Utils.utils import subsequent_distance
 
 
 class BTree:

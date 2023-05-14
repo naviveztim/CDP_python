@@ -1,11 +1,12 @@
 import numpy as np
 import sys
-#from scipy.stats import entropy
+# from scipy.stats import entropy
 from collections import Counter
 import functools
 from math import log
 import pandas as pd
 import csv
+from logger import logger
 
 
 def similarity_coeff(s1: str, s2: str) -> int:
@@ -89,17 +90,21 @@ def calculate_information_gain(distances: list):
     return information_gain, optimal_split_distance, optimal_entropy
 
 
-def from_ucr_txt(filepath: str) -> pd.DataFrame:
+def from_ucr_txt(filepath: str, delimiter: str = ',') -> pd.DataFrame:
+
     """ UCR dataset format is a pure text format where every row starts
     with time series index and is followed by value of the time series. The lengths of those time series
     might not be the same"""
+
     pdf = pd.DataFrame(columns=['class_index', 'values'])
     with open(filepath) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
+        csv_reader = csv.reader(csv_file, delimiter=delimiter)
         for row in csv_reader:
             pdf = pdf.append({'class_index': int(row[0])
                               , 'values': [float(x) for x in row[1:]]}
                               , ignore_index=True)
+
+    logger.debug(f'Number of train samples: {pdf.shape[0]}')
     return pdf
 
 

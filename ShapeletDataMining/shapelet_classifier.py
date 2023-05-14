@@ -7,9 +7,10 @@ import numpy as np
 
 from ShapeletDataMining.shapelet import Shapelet
 from PSO.pso import ShapeletsPso
-from Utils.utils import from_ucr_txt, subsequent_distance
+from Utils.utils import subsequent_distance
 from Utils.btree import BTree
 from itertools import combinations, permutations
+from logger import logger
 
 
 class ShapeletClassifier:
@@ -26,9 +27,10 @@ class ShapeletClassifier:
         # Balance training dataset-take 10 samples from each class
         self.balanced_dataset = pd.DataFrame()
         for i in dataset['class_index'].unique():
-            self.balanced_dataset = pd.concat([self.balanced_dataset
-                                                  , dataset.loc[self.dataset['class_index'] == i]
-                                              .sample(10, replace=True)])
+            self.balanced_dataset = \
+                pd.concat([self.balanced_dataset,
+                           dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
+                           ])
         self.balanced_dataset = self.balanced_dataset.reset_index().drop(columns=['index'])
 
     @staticmethod
@@ -47,8 +49,10 @@ class ShapeletClassifier:
         """ Assign left and right class index to given shapelet"""
 
         # Take number of time series which distance to the shapelet is less than optimal split distance
-        count_less = (subsequent_distance(dataset.values, shapelet.values)
-                      < shapelet.optimal_split_distance).sum()
+        count_less = 0
+        for values in dataset['values']:
+            if subsequent_distance(values, shapelet.values) < shapelet.optimal_split_distance:
+                count_less += 1
 
         # Take the rest of the counts
         count_other = dataset.shape[0] - count_less
@@ -79,15 +83,17 @@ class ShapeletClassifier:
                                     , train_dataframe=train_dataset)
         shapelet_pso.start_pso()
 
-        # Fill shapelet parameters- shapelet values, best info gain, optimal split distance
+        # Fill shapelet parameters- shapelet values, the best info gain, optimal split distance
         shapelet = Shapelet(values=shapelet_pso.best_particle.best_position# TODO: Check if position or best_position
                             , best_information_gain=shapelet_pso.best_particle.best_information_gain
                             , optimal_split_distance=shapelet_pso.best_particle.optimal_split_distance)
 
         # TODO: Check if only one call of below function is enough
+        # TODO: The code does not work well- non of distances in following function is smaller than
+        # TODO: optimal split distance
         # Fill shapelet parameters- left and right class indexes of the shapelet
-        ShapeletClassifier._split_classes(shapelet, class_index_a, train_dataset[train_dataset.class_index == class_index_a])
-        ShapeletClassifier._split_classes(shapelet, class_index_b, train_dataset[train_dataset.class_index == class_index_b])
+        self._split_classes(shapelet, class_index_a, train_dataset[train_dataset.class_index == class_index_a])
+        self._split_classes(shapelet, class_index_b, train_dataset[train_dataset.class_index == class_index_b])
 
         return shapelet
 
@@ -184,7 +190,7 @@ class ShapeletClassifier:
 
         return best_tree
 
-    def _create_group(self, class_indexes: list) -> list:
+    def _create_group(self) -> list:
 
         class_indexes = self.balanced_dataset['class_index'].unique()
         num_class_indexes = len(class_indexes)
@@ -200,9 +206,6 @@ class ShapeletClassifier:
                 freq = Counter(list(chain(*valid_combs)))
                 if all(freq[class_] < num_allowed_indexes for class_ in comb):
                     valid_combs.append(comb)
-
-        # Sanity check
-        #print(freq)
 
         return valid_combs
 
@@ -244,7 +247,7 @@ class ShapeletClassifier:
 
         return best_tree
 
-    def create_and_train_classifiers(self) -> list[BTree]:
+    def create_and_train_classifiers(self) -> list:
 
         """ Create, train and save all required classifier for given pattern length"""
 
@@ -253,7 +256,7 @@ class ShapeletClassifier:
         # Take possible combination of class indexes based on
         # num. classes per tree and required pattern length
         group = self._create_group()
-        print(group)
+        logger.debug(group)
 
         for combination in group:
             # Check if classifier already exists
