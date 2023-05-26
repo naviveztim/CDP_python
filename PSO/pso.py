@@ -17,8 +17,8 @@ class CandidateShapelet:
         self.optimal_split_distance = 0.0
         self.best_information_gain = sys.float_info.min
         self.length = length
-        self.position = np.array([random.uniform(min_position, max_position) for _ in range(length)])
-        self.velocity = np.array([random.uniform(min_velocity, max_velocity) for _ in range(length)])
+        self.position = np.array([random.gauss(min_position, max_position) for _ in range(length)])
+        self.velocity = np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)])
         self.best_position = self.position
 
     def copy(self, candidate):
@@ -66,7 +66,7 @@ class ShapeletsPso:
         self.train_dataframe = train_dataframe #ShapeletsPso.norm(train_dataframe)
         '''
         time_series_dataframe: pd.DataFrame
-        class_index:int     |   values:np.array
+        class_index:int     |   values:list
         ---------------------------------------
             0               |   [1.2, 0.2, 0.09, ...]
             0               |   [1.1, 0.9, 0.4, ....]
@@ -81,19 +81,6 @@ class ShapeletsPso:
         # Init swarm
         self._init_swarm()
 
-    @staticmethod
-    def norm(dataframe: pd.DataFrame):
-        """ Standardize array of values for entire timeseries dataframe"""
-        norm_dataframe = pd.DataFrame()
-
-        for _, time_series in dataframe.iterrows():
-            ts = np.array(time_series['values'])
-            d = {'class_index': time_series['class_index']
-                ,'values': (ts - np.mean(ts))/np.std(ts)}
-            norm_dataframe = norm_dataframe.append(d, ignore_index=True)
-
-        return norm_dataframe
-
     def _fitness_function(self, candidate: CandidateShapelet):
 
         """ Check the fitness of candidate shapelet"""
@@ -106,13 +93,13 @@ class ShapeletsPso:
                              , utils.subsequent_distance(time_series["values"], candidate.position))
             distances.append(distance_item)
 
-        print(f'Distances: {distances}')
         # Find the optimal split point given by candidate
         information_gain, split_point, optimal_entropy = \
             utils.calculate_information_gain(sorted(distances, key=lambda t: t[1]))
-        print(f'information_gain: {information_gain}'
-              f', split_point: {split_point}'
-              f', entropy: {optimal_entropy}')
+
+        #print(f'information_gain: {information_gain}'
+        #      f', split_point: {split_point}'
+        #      f', entropy: {optimal_entropy}')
 
         # Move candidate towards best position
         if candidate.best_information_gain < information_gain:
@@ -138,12 +125,12 @@ class ShapeletsPso:
     def start_pso(self):
         """ Find the best shapelet that distinguishes time series from two classes"""
 
-        old_best_gain = sys.float_info.min
-        new_best_gain = sys.float_info.max
+        old_best_gain = 1.0
+        new_best_gain = 0.0
         iteration = 0
         # TODO: Switch to ITERATION_EPSILON
-        #while abs(old_best_gain - new_best_gain) > ShapeletsPso.ITERATION_EPSILON:
-        while iteration < ShapeletsPso.MAX_ITERATIONS:
+        while abs(old_best_gain - new_best_gain) > ShapeletsPso.ITERATION_EPSILON:
+        #while iteration < ShapeletsPso.MAX_ITERATIONS:
 
             # Run competition between candidates
             for candidate in self.swarm:
@@ -154,9 +141,9 @@ class ShapeletsPso:
                     r1 = random.random()
                     r2 = random.random()
 
-                    candidate.velocity[i] = ShapeletsPso.W * candidate.velocity[i] + \
-                        ShapeletsPso.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
-                        ShapeletsPso.C2*r2*(self.best_particle.position[i] - candidate.position[i])
+                    candidate.velocity[i] = self.W * candidate.velocity[i] + \
+                        self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
+                        self.C2*r2*(self.best_particle.position[i] - candidate.position[i])
 
                 # Update candidate position
                 candidate.position += candidate.velocity
@@ -170,6 +157,9 @@ class ShapeletsPso:
                     self.best_particle.copy(candidate)
 
             old_best_gain = new_best_gain
-            #new_best_gain = self.best_particle.best_information_gain
+            new_best_gain = self.best_particle.best_information_gain
+            print(f'Old best gain: {old_best_gain}')
+            print(f'New best gain {new_best_gain}')
+
             iteration += 1
             print(f'Iteration: {iteration}')

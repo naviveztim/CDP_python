@@ -44,22 +44,29 @@ class ShapeletClassifier:
         return tree
 
     @staticmethod
-    def _split_classes(shapelet: Shapelet, class_index: int, dataset: pd.DataFrame):
+    def _count_left_right(shapelet: Shapelet, class_dataset: pd.DataFrame):
+
+        # Take number of time series which distance to the shapelet is less than optimal split distance
+        count_left = 0
+        for values in class_dataset['values']:
+            if subsequent_distance(values, shapelet.values) < shapelet.optimal_split_distance:
+                count_left += 1
+
+        return count_left, class_dataset.shape[0] - count_left
+
+    def _split_classes(self, shapelet: Shapelet, class_index_a: int, class_index_b: int, dataset: pd.DataFrame):
 
         """ Assign left and right class index to given shapelet"""
 
-        # Take number of time series which distance to the shapelet is less than optimal split distance
-        count_less = 0
-        for values in dataset['values']:
-            if subsequent_distance(values, shapelet.values) < shapelet.optimal_split_distance:
-                count_less += 1
+        class_dataset_a = dataset[dataset.class_index == class_index_a]
+        count_left_a, count_right_a = self._count_left_right(shapelet, class_dataset_a)
 
-        # Take the rest of the counts
-        count_other = dataset.shape[0] - count_less
+        class_dataset_b = dataset[dataset.class_index == class_index_b]
+        count_left_b, count_right_b = self._count_left_right(shapelet, class_dataset_b)
 
         # Assign class index, for which majority of samples have
-        shapelet.left_class_index = class_index if count_less > count_other else None
-        shapelet.right_class_index = class_index if count_less < count_other else None
+        shapelet.left_class_index = class_index_a if count_left_a > count_left_b else class_index_b
+        shapelet.right_class_index = class_index_a if count_right_a > count_right_b else class_index_b
 
     def _find_shapelet(self, class_index_a: int, class_index_b: int) -> Shapelet:
         """ Find shapelet and its parameters such as optimal split distance, left and right class index"""
@@ -68,9 +75,11 @@ class ShapeletClassifier:
                                                   .isin([class_index_a, class_index_b])]
         # Start PSO algorithm to find shapelet that separates two classes
         min_length = 3
-        max_length = len(train_dataset['values'][0])
+        max_length = min(len(x) for x in train_dataset['values'])
         step = (max_length - min_length)//20
         step = step if step > 0 else 1
+        num_classes = len(self.balanced_dataset['class_index'].unique())
+        step = step if num_classes >= 4 else 1
         min_train_value = min(train_dataset['values'].explode())
         max_train_value = max(train_dataset['values'].explode())
         shapelet_pso = ShapeletsPso(min_length=min_length
@@ -88,12 +97,8 @@ class ShapeletClassifier:
                             , best_information_gain=shapelet_pso.best_particle.best_information_gain
                             , optimal_split_distance=shapelet_pso.best_particle.optimal_split_distance)
 
-        # TODO: Check if only one call of below function is enough
-        # TODO: The code does not work well- non of distances in following function is smaller than
-        # TODO: optimal split distance
         # Fill shapelet parameters- left and right class indexes of the shapelet
-        self._split_classes(shapelet, class_index_a, train_dataset[train_dataset.class_index == class_index_a])
-        self._split_classes(shapelet, class_index_b, train_dataset[train_dataset.class_index == class_index_b])
+        self._split_classes(shapelet, class_index_a, class_index_b, train_dataset)
 
         return shapelet
 
@@ -110,7 +115,7 @@ class ShapeletClassifier:
         # Check if the file already exists, if so add a number to the end of the file name
         i = 1
         while os.path.isfile(classifier_file_name):
-            classifier_file_name = f"{os.path.splitext(classifier_file_name)[0]}_{i}.pickle"
+            classifier_file_name = f"{os.path.splitext(classifier_file_name)[0]}({i}).pickle"
             i += 1
 
         return classifier_file_name
@@ -222,7 +227,7 @@ class ShapeletClassifier:
 
         return serialized_tree
 
-    def _train_and_save_tree(self, classes_in_combination: list) -> BTree:
+    def _train_and_save_tree(self, classes_in_combination: tuple) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""
         shapelets = []

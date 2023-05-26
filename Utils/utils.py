@@ -43,7 +43,7 @@ def subsequent_distance(time_series_values: np.array, candidate_position: np.arr
     min_distance = sys.float_info.max
     for i in range(len(time_series_values) - len(candidate_position) + 1):
         current_values = time_series_values[i:i+len(candidate_position)]
-        min_distance = min(min_distance, np.linalg.norm(current_values - candidate_position))
+        min_distance = min(min_distance, np.sum(np.square(current_values - candidate_position)))
 
     return min_distance
 
@@ -63,7 +63,7 @@ def calculate_information_gain(distances: list):
     prev_distance = distances[0][1]
     for distance in distances:
         if distance[1] > prev_distance:
-            d = (prev_distance + distance[1]) / 2.0
+            d = prev_distance + (distance[1] - prev_distance) / 2.0
             prev_distance = distance[1]
 
             # Divide items based on split distance - d

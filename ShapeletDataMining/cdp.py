@@ -33,30 +33,30 @@ class CDP:
         self.classifiers_folder = classifiers_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        self.compression_factor = compression_factor
-        self.original_or_derivate = original_or_derivate
-        self.normalize = normalize
         self.train_dataset = from_ucr_txt(train_dataset_filepath, delimiter)
         self.patterns: list[str] = []
         self.classification_trees: list[BTree] = []
-        self._process_train_dataset()
+        self._process_train_dataset(compression_factor, normalize, original_or_derivate)
 
-    def _process_train_dataset(self):
+    def _process_train_dataset(self, compression_factor, normalize, original_or_derivate):
 
         # Apply compression on time series values
-        if self.compression_factor:
+        if compression_factor > 1:
             self.train_dataset['values'] = self.train_dataset['values'] \
-                .apply(lambda x: pd.Series(x).rolling(window=self.compression_factor, min_periods=1).mean().tolist())
+                .apply(lambda x: pd.Series(x).rolling(window=compression_factor, center=False)
+                                             .mean()
+                                             .dropna()
+                                             .tolist()[::2])
 
         # Take original/derivative time series values
-        if self.original_or_derivate == 'D' or self.original_or_derivate == 'd':
+        if original_or_derivate == 'D' or original_or_derivate == 'd':
             self.train_dataset['values'] = self.train_dataset['values'] \
                 .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
 
         # Apply normalization
-        if self.normalize:
+        if normalize == 'Y' or normalize == 'y':
             self.train_dataset['values'] = self.train_dataset['values'] \
-                .apply(lambda x: [(i - np.mean(x)) / np.std(x) for i in x])
+                .apply(lambda x: (x - np.mean(x)) / np.std(x))
 
     def fit(self):
 
