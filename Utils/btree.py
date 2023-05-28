@@ -1,4 +1,3 @@
-import numpy as np
 from ShapeletDataMining.shapelet import Shapelet
 import pandas as pd
 from Utils.utils import subsequent_distance
@@ -7,20 +6,20 @@ from Utils.utils import subsequent_distance
 class BTree:
 
     class Node:
-        def __init__(self, shapelet):
-            self.shapelet = shapelet
-            self.right = None
-            self.left = None
+        def __init__(self, shapelet: Shapelet):
+            self.shapelet: Shapelet = shapelet
+            self.left: 'Node' = None
+            self.right: 'Node' = None
             self.depth = 0
 
-    def __init__(self, shapelet):
-        self.root = self.Node(shapelet)
-        self.accuracy = 0.0
+    def __init__(self, shapelet: Shapelet):
+        self.root: BTree.Node = self.Node(shapelet)
+        self.accuracy: float = 0.0
 
     def build_classification_path(self, time_series: pd.Series) -> str:
 
-        current_node = self.root
-        path_string = ''
+        current_node: BTree.Node = self.root
+        path_string: str = ''
 
         # Iterate the tree
         while True:
@@ -48,10 +47,10 @@ class BTree:
 
         return path_string
 
-    def add(self, node: Node, shapelet: Shapelet)->bool:
+    def add(self, node: Node, shapelet: Shapelet) -> bool:
         """ Add new node to the tree"""
 
-        add_result = False
+        add_result: bool = False
 
         if node is None or shapelet is None:
             return False

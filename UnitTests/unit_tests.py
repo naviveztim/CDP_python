@@ -1,4 +1,6 @@
 import unittest
+
+import Utils.utils
 from Utils.utils import from_ucr_txt, subsequent_distance
 from ShapeletDataMining.shapelet_classifier import ShapeletClassifier
 
@@ -10,6 +12,32 @@ class TestPSO(unittest.TestCase):
         test_pdf = from_ucr_txt(filepath)
         print(test_pdf.shape)
         print(test_pdf.head().to_string())
+
+    def test_entropy(self):
+
+        val1 = [1]
+        entropy = Utils.utils.entropy(val1)
+        assert(0.0 == entropy)
+
+        val1 = [1, 1]
+        entropy = Utils.utils.entropy(val1)
+        assert(0.0 == entropy)
+
+        val1 = [1]
+        entropy = Utils.utils.entropy(val1)
+        assert(0.0 == entropy)
+
+        val1 = [1, 1, 1]
+        entropy = Utils.utils.entropy(val1)
+        assert(0.0 == entropy)
+
+        val1 = [1,2,2,2,1,1]
+        entropy = Utils.utils.entropy(val1)
+        assert(0.693 == round(entropy, 3))
+
+        val1 = [11, 1, 2]
+        entropy = Utils.utils.entropy(val1)
+        print(f'Entropy: {round(entropy, 3)}')
 
     def test_groups(self):
 

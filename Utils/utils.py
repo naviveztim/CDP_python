@@ -42,7 +42,7 @@ def subsequent_distance(time_series_values: np.array, candidate_position: np.arr
     # chunk and candidate shapelet
     min_distance = sys.float_info.max
     for i in range(len(time_series_values) - len(candidate_position) + 1):
-        current_values = time_series_values[i:i+len(candidate_position)]
+        current_values = np.array(time_series_values[i:i+len(candidate_position)])
         min_distance = min(min_distance, np.sum(np.square(current_values - candidate_position)))
 
     return min_distance

@@ -78,7 +78,11 @@ class CDP:
         # , (1, 'RRRRLRRRRLL')]
         for _, time_series in self.train_dataset.sample(min_samples, replace=True).iterrows():
             self.patterns.append((time_series['class_index']
-                                  , ''.join(self.classification_trees.build_classification_path(time_series))))
+                                  , ''.join([classification_tree.build_classification_path(time_series)
+                                             for classification_tree in self.classification_trees])))
+        # TEST
+        for pattern in self.patterns:
+            print(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     def predict(self, test_dataset_filepath: str, delimiter: str = ',') -> list:
 

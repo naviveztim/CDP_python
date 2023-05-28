@@ -9,17 +9,30 @@ compares several candidate shapelets in a swarm. As result select the one which
 maximally separate two classes."""
 
 
+class CircularListIterator:
+
+    def __init__(self):
+        self.float_list = [0.25, 0.71, 0.22, 0.12, 0.43, 0.03]
+        self.index = -1
+
+    def random(self) -> float:
+        self.index = (self.index + 1) % len(self.float_list)
+        return self.float_list[self.index]
+
+
 class CandidateShapelet:
 
-    def __init__(self, length
-                 , min_velocity, max_velocity
-                 , min_position, max_position):
-        self.optimal_split_distance = 0.0
-        self.best_information_gain = sys.float_info.min
-        self.length = length
-        self.position = np.array([random.gauss(min_position, max_position) for _ in range(length)])
-        self.velocity = np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)])
-        self.best_position = self.position
+    def __init__(self
+                 , length: int
+                 , min_velocity: int, max_velocity: int
+                 , min_position: int, max_position: int):
+        self.optimal_split_distance: float = 0.0
+        self.best_information_gain: float = sys.float_info.min
+        self.length: int = length
+        # TODO: Restore original random definitions
+        self.position: np.array = np.zeros(length) #np.array([random.gauss(min_position, max_position) for _ in range(length)])
+        self.velocity: np.array = np.zeros(length) #np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)])
+        self.best_position: np.array = self.position
 
     def copy(self, candidate):
         if isinstance(candidate, CandidateShapelet):
@@ -30,6 +43,7 @@ class CandidateShapelet:
             self.velocity[:len(candidate.velocity)] = candidate.velocity
             self.best_position = candidate.best_position
 
+    '''
     def __repr__(self):
         print(f'optimal_split_distance: {self.optimal_split_distance}')
         print(f'best_information_gain: {self.best_information_gain}')
@@ -37,7 +51,7 @@ class CandidateShapelet:
         print(f'position: {self.position}')
         print(f'velocity: {self.velocity}')
         print(f'best_position: {self.best_position}')
-
+    '''
 
 class ShapeletsPso:
 
@@ -50,32 +64,26 @@ class ShapeletsPso:
     MAX_ITERATIONS = 20
     ITERATION_EPSILON = 0.0000001
 
-    def __init__(self, min_length: int, max_length: int, step: int
+    def __init__(self
+                 , min_length: int, max_length: int
+                 , step: int
                  , min_position: float, max_position: float
                  , min_velocity: float, max_velocity: float
                  , train_dataframe: pd.DataFrame):
 
-        self.swarm = []
-        self.min_position = min_position
-        self.max_position = max_position
-        self.min_velocity = min_velocity
-        self.max_velocity = max_velocity
-        self.min_particle_length = min_length
-        self.max_particle_length = max_length
-        self.step = step
-        self.train_dataframe = train_dataframe #ShapeletsPso.norm(train_dataframe)
-        '''
-        time_series_dataframe: pd.DataFrame
-        class_index:int     |   values:list
-        ---------------------------------------
-            0               |   [1.2, 0.2, 0.09, ...]
-            0               |   [1.1, 0.9, 0.4, ....]
-            1               |   [2, 2, 2, ...]
-            1               |   [1.1, 1.9, 2.1, ...]
-        '''
+        self.swarm: list = []
+        self.min_position: float = min_position
+        self.max_position: float = max_position
+        self.min_velocity: float = min_velocity
+        self.max_velocity: float = max_velocity
+        self.min_particle_length: int = min_length
+        self.max_particle_length: int = max_length
+        self.step: int = step
+        self.train_dataframe: pd.DataFrame = train_dataframe
+        self.rand = CircularListIterator() # TEST # TODO: Restore real random vals
 
         # Init best particle
-        self.best_particle = CandidateShapelet(max_length
+        self.best_particle: CandidateShapelet = CandidateShapelet(max_length
                                                , min_velocity, max_velocity
                                                , min_position, max_position)
         # Init swarm
@@ -114,6 +122,14 @@ class ShapeletsPso:
             candidate = CandidateShapelet(length
                                           , self.min_velocity, self.max_velocity
                                           , self.min_position, self.max_position)
+            # TODO: That is may be useless if random values introduced in __init__
+            candidate.velocity = \
+                np.array([(self.max_velocity - self.min_velocity)*self.rand.random() + self.min_velocity for _ in
+                         candidate.velocity])
+
+            candidate.position = \
+                np.array([(self.max_position - self.min_position) * self.rand.random() + self.min_position for _ in
+                         candidate.position])
 
             self._fitness_function(candidate)
 
@@ -128,6 +144,7 @@ class ShapeletsPso:
         old_best_gain = 1.0
         new_best_gain = 0.0
         iteration = 0
+
         # TODO: Switch to ITERATION_EPSILON
         while abs(old_best_gain - new_best_gain) > ShapeletsPso.ITERATION_EPSILON:
         #while iteration < ShapeletsPso.MAX_ITERATIONS:
@@ -138,8 +155,11 @@ class ShapeletsPso:
                 # Update candidate velocity
                 for i in range(len(candidate.velocity)):
 
-                    r1 = random.random()
-                    r2 = random.random()
+                    # TODO: Restore random vals
+                    #r1 = random.random()
+                    #r2 = random.random()
+                    r1 = self.rand.random()
+                    r2 = self.rand.random()
 
                     candidate.velocity[i] = self.W * candidate.velocity[i] + \
                         self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \

@@ -37,9 +37,12 @@ class ShapeletClassifier:
     def _build_tree(permutation: tuple):
         """ Build tree from given permutation """
 
-        tree = BTree(permutation[0][0])
+        # Initialize the decision tree
+        tree = BTree(permutation[0])
+
+        # Build the tree
         for p in permutation:
-            tree.add(p)
+            tree.add(tree.root, p)
 
         return tree
 
@@ -80,8 +83,10 @@ class ShapeletClassifier:
         step = step if step > 0 else 1
         num_classes = len(self.balanced_dataset['class_index'].unique())
         step = step if num_classes >= 4 else 1
-        min_train_value = min(train_dataset['values'].explode())
-        max_train_value = max(train_dataset['values'].explode())
+        # min(train_dataset['values'].explode()) # TODO: Restore?
+        min_train_value = np.min(train_dataset.iloc[0]['values'])
+        # max(train_dataset['values'].explode()) # TODO: Restore?
+        max_train_value = np.max(train_dataset.iloc[0]['values'])
         shapelet_pso = ShapeletsPso(min_length=min_length
                                     , max_length=max_length
                                     , step=step
@@ -93,7 +98,7 @@ class ShapeletClassifier:
         shapelet_pso.start_pso()
 
         # Fill shapelet parameters- shapelet values, the best info gain, optimal split distance
-        shapelet = Shapelet(values=shapelet_pso.best_particle.best_position# TODO: Check if position or best_position
+        shapelet = Shapelet(values=shapelet_pso.best_particle.position[:shapelet_pso.best_particle.length]# TODO: Check if position or best_position
                             , best_information_gain=shapelet_pso.best_particle.best_information_gain
                             , optimal_split_distance=shapelet_pso.best_particle.optimal_split_distance)
 
@@ -128,7 +133,7 @@ class ShapeletClassifier:
 
         # Write the serialized classifier to a file
         with open(classifier_file_name, 'wb') as file:
-            pickle.dumps(tree, file)
+            pickle.dump(tree, file)
 
     def _test_tree_accuracy(self, tree: BTree, classes_in_combination: list):
 
@@ -177,7 +182,7 @@ class ShapeletClassifier:
 
         return acc
 
-    def _find_most_accurate_tree(self, shapelets: list, classes_in_combination: list):
+    def _find_most_accurate_tree(self, shapelets: list, classes_in_combination: tuple):
 
         """ Tries variety of combinations to build most accurate tree"""
 
@@ -187,7 +192,7 @@ class ShapeletClassifier:
         for combination in list(combinations(shapelets, len(classes_in_combination)-1)):
             for permutation in list(permutations(combination)):
                 tree = self._build_tree(permutation)
-                acc = self._test_tree_accuracy(self, tree, classes_in_combination)
+                acc = self._test_tree_accuracy(tree, classes_in_combination)
                 if best_acc < acc:
                     best_acc = acc
                     best_tree = tree
@@ -271,7 +276,7 @@ class ShapeletClassifier:
             if not classifier:
                 classifier = self._train_and_save_tree(combination)
 
-            classifiers.add(classifier)
+            classifiers.append(classifier)
 
         return classifiers
 

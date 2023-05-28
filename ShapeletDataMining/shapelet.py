@@ -58,7 +58,6 @@ class Shapelet:
         else:
             return -2
 
-    '''
     def __repr__(self):
 
         print(f'values: {self.values}')
@@ -66,4 +65,3 @@ class Shapelet:
         print(f'best_information_gain: {self.best_information_gain}')
         print(f'left_class_index: {self.left_class_index}')
         print(f'right_class_index: {self.right_class_index}')
-    '''
