@@ -32,6 +32,7 @@ class ShapeletClassifier:
                            dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
                            ])
         self.balanced_dataset = self.balanced_dataset.reset_index().drop(columns=['index'])
+        self.loaded_tree_names: list = []
 
     @staticmethod
     def _build_tree(permutation: tuple):
@@ -107,29 +108,45 @@ class ShapeletClassifier:
 
         return shapelet
 
-    def _get_serialize_name(self, classes_in_combination: list):
+    def _get_serialized_name(self, classes_in_combination: tuple):
 
         """ Build filename for serialization """
-
-        # Create classifier filename
-        classifier_file_name = os.path.join(
+        base_name = os.path.join(
             self.classifiers_folder
-            , "Classificatin_tree_" + "_".join([str(x) for x in classes_in_combination])
-              + ".pickle")
+            , "Classificatin_tree_" + "_".join([str(x) for x in classes_in_combination]))
+        extension = '.pickle'
 
-        # Check if the file already exists, if so add a number to the end of the file name
-        i = 1
-        while os.path.isfile(classifier_file_name):
-            classifier_file_name = f"{os.path.splitext(classifier_file_name)[0]}({i}).pickle"
-            i += 1
+        # Make unique filename
+        counter = 1
+        unique_filename = base_name + extension
+        while unique_filename in self.loaded_tree_names:
+            unique_filename = f"{base_name}_({counter}){extension}"
+            counter += 1
 
-        return classifier_file_name
+        return unique_filename
 
-    def _serialize_tree(self, tree: BTree, classes_in_combination: list):
+    def _generate_serialization_name(self, classes_in_combination: list):
+
+        """ Build filename for serialization """
+        base_name = os.path.join(
+            self.classifiers_folder
+            , "Classificatin_tree_" + "_".join([str(x) for x in classes_in_combination]))
+        extension = '.pickle'
+
+        # Make unique filename
+        counter = 1
+        unique_filename = base_name + extension
+        while os.path.isfile(unique_filename):
+            unique_filename = f"{base_name}_({counter}){extension}"
+            counter += 1
+
+        return unique_filename
+
+    def _serialize_tree(self, tree: BTree, classes_in_combination: list, classifier_file_name: str):
 
         """ Serialize best tree into classification folder"""
 
-        classifier_file_name = self._get_serialize_name(classes_in_combination)
+        #classifier_file_name = self._generate_serialization_name(classes_in_combination)
 
         # Write the serialized classifier to a file
         with open(classifier_file_name, 'wb') as file:
@@ -221,18 +238,18 @@ class ShapeletClassifier:
 
     def _load_tree(self, classes_in_combination: list) -> BTree:
         """ Deserialize classification tree from disk """
-        classifier_file_name = self._get_serialize_name(classes_in_combination)
+        classifier_file_name = self._get_serialized_name(classes_in_combination)
 
         try:
             # Read serialized classifier from file
             with open(classifier_file_name, 'rb') as file:
                 serialized_tree = pickle.load(file)
         except FileNotFoundError:
-            return None
+            return None, classifier_file_name
 
-        return serialized_tree
+        return serialized_tree, classifier_file_name
 
-    def _train_and_save_tree(self, classes_in_combination: tuple) -> BTree:
+    def _train_and_save_tree(self, classes_in_combination: tuple, classifier_file_name:str) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""
         shapelets = []
@@ -253,7 +270,7 @@ class ShapeletClassifier:
         best_tree = self._find_most_accurate_tree(shapelets, classes_in_combination)
 
         # Serialize tree to disk
-        self._serialize_tree(best_tree, classes_in_combination)
+        self._serialize_tree(best_tree, classes_in_combination, classifier_file_name)
 
         return best_tree
 
@@ -270,13 +287,15 @@ class ShapeletClassifier:
 
         for combination in group:
             # Check if classifier already exists
-            classifier = self._load_tree(combination)
+            classifier, classifier_file_name = self._load_tree(combination)
 
             # Train and save, if not exists
             if not classifier:
-                classifier = self._train_and_save_tree(combination)
+                classifier = self._train_and_save_tree(combination, classifier_file_name)
 
             classifiers.append(classifier)
+
+            self.loaded_tree_names.append(classifier_file_name)
 
         return classifiers
 

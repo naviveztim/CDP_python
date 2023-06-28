@@ -69,14 +69,14 @@ class CDP:
         self.classification_trees = shapelet_classifier.create_and_train_classifiers()
 
         # Take equal number of samples from every class index
-        min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
+        #min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
 
         # Create patterns collection in format:
         #  [(0, 'LLRLLLLRLLL')
         # , (0, 'LLRRLLLRLLL')
         # , (1, 'RRRLLRRRLLL')
         # , (1, 'RRRRLRRRRLL')]
-        for _, time_series in self.train_dataset.sample(min_samples, replace=True).iterrows():
+        for _, time_series in self.train_dataset.iterrows():
             self.patterns.append((time_series['class_index']
                                   , ''.join([classification_tree.build_classification_path(time_series)
                                              for classification_tree in self.classification_trees])))

@@ -1,7 +1,7 @@
 import numpy as np
-
 import argparse
 from ShapeletDataMining.cdp import CDP
+from logger import logger
 
 
 def get_arguments() -> argparse.Namespace:
@@ -68,6 +68,11 @@ if __name__ == '__main__':
 
     # Train the model given parameters during initialization
     cdp.fit()
+
+    if args.test_dir:
+        cdp.predict(test_dataset_filepath=args.test_dir, delimiter=',')
+    else:
+        logger.info('Training was successful.')
 
 
 
