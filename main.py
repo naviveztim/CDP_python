@@ -2,7 +2,7 @@ import numpy as np
 import argparse
 from ShapeletDataMining.cdp import CDP
 from logger import logger
-
+from Utils.utils import from_ucr_txt
 
 def get_arguments() -> argparse.Namespace:
     """ Parses command line arguments """
@@ -53,26 +53,43 @@ if __name__ == '__main__':
     # Get command line arguments
     args = get_arguments()
 
-    # Check arguments
+    # Check input arguments
     show_arguments(args)
 
-    # Initialize Concatenated Decision Paths main class
-    cdp = CDP(train_dataset_filepath=args.train_dir
+    # Get train dataset
+    train_dataset = from_ucr_txt(args.train_dir, args.delimiter)
+
+    # Initialize CDP(Concatenated Decision Path) model
+    cdp = CDP(dataset=train_dataset
               , classifiers_folder=args.model_dir
-              , delimiter=args.delimiter
               , num_classes_per_tree=int(args.nodes)
               , pattern_length=int(args.trees)
               , compression_factor=int(args.compress)
               , original_or_derivate=args.signal
               , normalize=args.normalize)
 
-    # Train the model given parameters during initialization
+    # Train the model
     cdp.fit()
 
+    # Test accuracy
     if args.test_dir:
-        cdp.predict(test_dataset_filepath=args.test_dir, delimiter=',')
-    else:
-        logger.info('Training was successful.')
+
+        # Get test dataset
+        test_dataset = from_ucr_txt(args.test_dir, delimiter=',')
+
+        # Predict samples in test dataset
+        predicted_class_indexes = cdp.predict(test_dataset)
+
+        # Iterate through predicted indexes and check correspondence with the original
+        num_correct_predictions = 0
+        for i, row in test_dataset.iterrows():
+            class_index = row['class_index']
+            if class_index == predicted_class_indexes[i]:
+                num_correct_predictions += 1
+
+        print(f"Accuracy: {100*round(num_correct_predictions/len(predicted_class_indexes), 3)}%")
+
+
 
 
 

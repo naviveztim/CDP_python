@@ -21,9 +21,8 @@ class CDP:
     """ Main class of Concatenated Decision Paths (CDP) method implementation"""
 
     def __init__(self
-                 , train_dataset_filepath: str
+                 , dataset: pd.DataFrame
                  , classifiers_folder: str
-                 , delimiter: str
                  , num_classes_per_tree: int
                  , pattern_length: int
                  , compression_factor: int = None
@@ -33,29 +32,32 @@ class CDP:
         self.classifiers_folder = classifiers_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        self.train_dataset = from_ucr_txt(train_dataset_filepath, delimiter)
+        self.train_dataset = dataset
         self.patterns: list[str] = []
         self.classification_trees: list[BTree] = []
-        self._process_train_dataset(compression_factor, normalize, original_or_derivate)
+        self.compression_factor = compression_factor
+        self.normalize = normalize
+        self.original_or_derivate = original_or_derivate
+        self._process_dataset(self.train_dataset)
 
-    def _process_train_dataset(self, compression_factor, normalize, original_or_derivate):
+    def _process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
 
         # Apply compression on time series values
-        if compression_factor > 1:
-            self.train_dataset['values'] = self.train_dataset['values'] \
-                .apply(lambda x: pd.Series(x).rolling(window=compression_factor, center=False)
+        if self.compression_factor > 1:
+            dataset['values'] = dataset['values'] \
+                .apply(lambda x: pd.Series(x).rolling(window=self.compression_factor, center=False)
                                              .mean()
                                              .dropna()
                                              .tolist()[::2])
 
         # Take original/derivative time series values
-        if original_or_derivate == 'D' or original_or_derivate == 'd':
-            self.train_dataset['values'] = self.train_dataset['values'] \
+        if self.original_or_derivate == 'D' or self.original_or_derivate == 'd':
+            dataset['values'] = dataset['values'] \
                 .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
 
         # Apply normalization
-        if normalize == 'Y' or normalize == 'y':
-            self.train_dataset['values'] = self.train_dataset['values'] \
+        if self.normalize == 'Y' or self.normalize == 'y':
+            dataset['values'] = dataset['values'] \
                 .apply(lambda x: (x - np.mean(x)) / np.std(x))
 
     def fit(self):
@@ -80,27 +82,26 @@ class CDP:
             self.patterns.append((time_series['class_index']
                                   , ''.join([classification_tree.build_classification_path(time_series)
                                              for classification_tree in self.classification_trees])))
-        # TEST
+        # Sanity check
         for pattern in self.patterns:
             print(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
-    def predict(self, test_dataset_filepath: str, delimiter: str = ',') -> list:
+    def predict(self, dataset: pd.DataFrame) -> list:
 
         """ Predict indexes of given time series """
 
-        # Read test dataset
-        test_dataset = from_ucr_txt(test_dataset_filepath, delimiter)
-
         # Apply pre-processing, already applied to train dataset
-        test_dataset = self.process_dataset(test_dataset)
+        self._process_dataset(dataset)
 
         predicted_class_indexes = []
 
         # Classify by comparing decision patterns
-        for _, time_series in test_dataset.iterrows():
+        for _, time_series in dataset.iterrows():
 
             # Find the pattern for given time series
-            pattern = ''.join(self.classification_trees.build_classification_path(time_series))
+            pattern = ''.join([classification_tree.build_classification_path(time_series)
+                               for classification_tree in self.classification_trees])
+                      # ''.join(self.classification_trees.build_classification_path(time_series))
 
             # Find similarity between found pattern and saved during training
             similarities = [(i, utils.similarity_coeff(pattern, s)) for i, s in self.patterns]
