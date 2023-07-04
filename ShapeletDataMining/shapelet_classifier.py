@@ -4,6 +4,7 @@ import os
 from collections import Counter
 from itertools import chain
 import numpy as np
+import math
 
 from ShapeletDataMining.shapelet import Shapelet
 from PSO.pso import ShapeletsPso
@@ -233,6 +234,12 @@ class ShapeletClassifier:
                 freq = Counter(list(chain(*valid_combs)))
                 if all(freq[class_] < num_allowed_indexes for class_ in comb):
                     valid_combs.append(comb)
+                # The numbers in combinations can  be almost uniformly distributed-
+                # aka one or two numbers might differ
+                if num_allowed_indexes*num_class_indexes >= \
+                   sum(freq.values()) >= \
+                   num_allowed_indexes*(num_class_indexes-1) + num_allowed_indexes - 2:
+                    return valid_combs
 
         return valid_combs
 
