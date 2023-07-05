@@ -80,7 +80,7 @@ class ShapeletsPso:
         self.max_particle_length: int = max_length
         self.step: int = step
         self.train_dataframe: pd.DataFrame = train_dataframe
-        self.rand = CircularListIterator() # TEST # TODO: Restore real random vals
+        #self.rand = CircularListIterator() # TEST # TODO: Restore real random vals
 
         # Init best particle
         self.best_particle: CandidateShapelet = CandidateShapelet(max_length
@@ -124,11 +124,11 @@ class ShapeletsPso:
                                           , self.min_position, self.max_position)
             # TODO: That is may be useless if random values introduced in __init__
             candidate.velocity = \
-                np.array([(self.max_velocity - self.min_velocity)*self.rand.random() + self.min_velocity for _ in
+                np.array([(self.max_velocity - self.min_velocity)*random.random() + self.min_velocity for _ in
                          candidate.velocity])
 
             candidate.position = \
-                np.array([(self.max_position - self.min_position) * self.rand.random() + self.min_position for _ in
+                np.array([(self.max_position - self.min_position) * random.random() + self.min_position for _ in
                          candidate.position])
 
             self._fitness_function(candidate)
@@ -156,10 +156,10 @@ class ShapeletsPso:
                 for i in range(len(candidate.velocity)):
 
                     # TODO: Restore random vals
-                    #r1 = random.random()
-                    #r2 = random.random()
-                    r1 = self.rand.random()
-                    r2 = self.rand.random()
+                    r1 = random.random()
+                    r2 = random.random()
+                    #r1 = self.rand.random()
+                    #r2 = self.rand.random()
 
                     candidate.velocity[i] = self.W * candidate.velocity[i] + \
                         self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
