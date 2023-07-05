@@ -236,9 +236,10 @@ class ShapeletClassifier:
                     valid_combs.append(comb)
                 # The numbers in combinations can  be almost uniformly distributed-
                 # aka one or two numbers might differ
-                if num_allowed_indexes*num_class_indexes >= \
-                   sum(freq.values()) >= \
-                   num_allowed_indexes*(num_class_indexes-1) + num_allowed_indexes - 2:
+                condition1 = num_allowed_indexes*num_class_indexes
+                condition2 = sum(freq.values())
+                condition = (condition1 - condition2) / condition1
+                if condition < 0.01:
                     return valid_combs
 
         return valid_combs
