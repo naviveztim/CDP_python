@@ -141,13 +141,15 @@ class ShapeletsPso:
     def start_pso(self):
         """ Find the best shapelet that distinguishes time series from two classes"""
 
-        old_best_gain = 1.0
+        old_best_gain = 0.0
         new_best_gain = 0.0
         iteration = 0
 
         # TODO: Switch to ITERATION_EPSILON
-        while abs(old_best_gain - new_best_gain) > ShapeletsPso.ITERATION_EPSILON:
+        while True:
         #while iteration < ShapeletsPso.MAX_ITERATIONS:
+
+            iteration += 1
 
             # Run competition between candidates
             for candidate in self.swarm:
@@ -178,8 +180,20 @@ class ShapeletsPso:
 
             old_best_gain = new_best_gain
             new_best_gain = self.best_particle.best_information_gain
+            # TODO: Replace 'print' with 'logger.info'
+            print(f'Iteration: {iteration}')
             print(f'Old best gain: {old_best_gain}')
             print(f'New best gain {new_best_gain}')
 
-            iteration += 1
-            print(f'Iteration: {iteration}')
+
+            if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
+                break
+        self.best_particle.position = self.best_particle.position[:self.best_particle.length]
+        self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length] # ??
+
+        #print(f'optimal_split_distance: {self.best_particle.optimal_split_distance}')
+        #print(f'best_information_gain: {self.best_particle.best_information_gain}')
+        #print(f'length: {self.best_particle.length}')
+        #print(f'position: {self.best_particle.position}')
+        #print(f'velocity: {self.best_particle.velocity}')
+        #print(f'best_position: {self.best_particle.best_position}')
