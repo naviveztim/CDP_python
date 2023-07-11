@@ -1,6 +1,8 @@
 import argparse
 from ShapeletDataMining.cdp import CDP
 from Utils.utils import from_ucr_txt
+from Utils.logger import logger
+
 
 def get_arguments() -> argparse.Namespace:
     """ Parses command line arguments """
@@ -26,7 +28,7 @@ def get_arguments() -> argparse.Namespace:
     try:
         args = parser.parse_args()
     except argparse.ArgumentError as e:
-        print(str(e))
+        logger.info(str(e))
         parser.print_help()
         exit(1)
 
@@ -35,15 +37,15 @@ def get_arguments() -> argparse.Namespace:
 
 def show_arguments(args: argparse.Namespace):
 
-    print(f'Train folder: {args.train_dir}')
-    print(f'Model folder: {args.model_dir}')
-    print(f'Test folder: {args.test_dir}')
-    print(f'Delimiter: {args.delimiter}')
-    print(f'Compress factor: {args.compress}')
-    print(f'Signal/Derivative?(S/D): {args.signal}')
-    print(f'Normalize?(Y/N): {args.normalize}')
-    print(f'Number of nodes in tree: {args.nodes}')
-    print(f'Number of trees in decision pattern: {args.trees}')
+    logger.info(f'Train folder: {args.train_dir}')
+    logger.info(f'Model folder: {args.model_dir}')
+    logger.info(f'Test folder: {args.test_dir}')
+    logger.info(f'Delimiter: {args.delimiter}')
+    logger.info(f'Compress factor: {args.compress}')
+    logger.info(f'Signal/Derivative?(S/D): {args.signal}')
+    logger.info(f'Normalize?(Y/N): {args.normalize}')
+    logger.info(f'Number of nodes in tree: {args.nodes}')
+    logger.info(f'Number of trees in decision pattern: {args.trees}')
 
 
 if __name__ == '__main__':
@@ -85,7 +87,7 @@ if __name__ == '__main__':
             if class_index == predicted_class_indexes[i]:
                 num_correct_predictions += 1
 
-        print(f"Accuracy: {100*round(num_correct_predictions/len(predicted_class_indexes), 3)}%")
+        logger.info(f"Accuracy: {100*round(num_correct_predictions/len(predicted_class_indexes), 3)}%")
 
 
 

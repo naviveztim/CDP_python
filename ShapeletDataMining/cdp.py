@@ -1,19 +1,10 @@
 import pandas as pd
-import pickle
-import os
-from collections import Counter
-from itertools import chain
 import numpy as np
-from functools import reduce
 from collections import defaultdict
-
 from Utils import utils
-from ShapeletDataMining.shapelet import Shapelet
+from Utils.logger import logger
 from ShapeletDataMining.shapelet_classifier import ShapeletClassifier
-from PSO.pso import ShapeletsPso
-from Utils.utils import from_ucr_txt, subsequent_distance
 from Utils.btree import BTree
-from itertools import combinations, permutations
 
 
 class CDP:
@@ -84,7 +75,7 @@ class CDP:
                                              for classification_tree in self.classification_trees])))
         # Sanity check
         for pattern in self.patterns:
-            print(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
+            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     def predict(self, dataset: pd.DataFrame) -> list:
 

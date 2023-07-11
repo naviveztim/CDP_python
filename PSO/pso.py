@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import random
 from Utils import utils
+from Utils.logger import logger
 import pandas as pd
 
 """ Implementation of Particle Swarm Optimization (PSO) algorithm- 
@@ -29,9 +30,8 @@ class CandidateShapelet:
         self.optimal_split_distance: float = 0.0
         self.best_information_gain: float = sys.float_info.min
         self.length: int = length
-        # TODO: Restore original random definitions
-        self.position: np.array = np.zeros(length) #np.array([random.gauss(min_position, max_position) for _ in range(length)])
-        self.velocity: np.array = np.zeros(length) #np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)])
+        self.position: np.array = np.array([random.gauss(min_position, max_position) for _ in range(length)]) #np.zeros(length) #
+        self.velocity: np.array = np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)]) #np.zeros(length)
         self.best_position: np.array = self.position
 
     def copy(self, candidate):
@@ -43,15 +43,6 @@ class CandidateShapelet:
             self.velocity[:len(candidate.velocity)] = candidate.velocity
             self.best_position = candidate.best_position
 
-    '''
-    def __repr__(self):
-        print(f'optimal_split_distance: {self.optimal_split_distance}')
-        print(f'best_information_gain: {self.best_information_gain}')
-        print(f'length: {self.length}')
-        print(f'position: {self.position}')
-        print(f'velocity: {self.velocity}')
-        print(f'best_position: {self.best_position}')
-    '''
 
 class ShapeletsPso:
 
@@ -80,7 +71,7 @@ class ShapeletsPso:
         self.max_particle_length: int = max_length
         self.step: int = step
         self.train_dataframe: pd.DataFrame = train_dataframe
-        #self.rand = CircularListIterator() # TEST # TODO: Restore real random vals
+        #self.rand = CircularListIterator() # TEST # TODO: TEST
 
         # Init best particle
         self.best_particle: CandidateShapelet = CandidateShapelet(max_length
@@ -105,10 +96,6 @@ class ShapeletsPso:
         information_gain, split_point, optimal_entropy = \
             utils.calculate_information_gain(sorted(distances, key=lambda t: t[1]))
 
-        #print(f'information_gain: {information_gain}'
-        #      f', split_point: {split_point}'
-        #      f', entropy: {optimal_entropy}')
-
         # Move candidate towards best position
         if candidate.best_information_gain < information_gain:
             candidate.best_information_gain = information_gain
@@ -122,7 +109,7 @@ class ShapeletsPso:
             candidate = CandidateShapelet(length
                                           , self.min_velocity, self.max_velocity
                                           , self.min_position, self.max_position)
-            # TODO: That is may be useless if random values introduced in __init__
+
             candidate.velocity = \
                 np.array([(self.max_velocity - self.min_velocity)*random.random() + self.min_velocity for _ in
                          candidate.velocity])
@@ -157,11 +144,8 @@ class ShapeletsPso:
                 # Update candidate velocity
                 for i in range(len(candidate.velocity)):
 
-                    # TODO: Restore random vals
                     r1 = random.random()
                     r2 = random.random()
-                    #r1 = self.rand.random()
-                    #r2 = self.rand.random()
 
                     candidate.velocity[i] = self.W * candidate.velocity[i] + \
                         self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
@@ -180,10 +164,9 @@ class ShapeletsPso:
 
             old_best_gain = new_best_gain
             new_best_gain = self.best_particle.best_information_gain
-            # TODO: Replace 'print' with 'logger.info'
-            print(f'Iteration: {iteration}')
-            print(f'Old best gain: {old_best_gain}')
-            print(f'New best gain {new_best_gain}')
+            logger.info(f'Iteration: {iteration}')
+            logger.info(f'Old best gain: {old_best_gain}')
+            logger.info(f'New best gain {new_best_gain}')
 
 
             if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
@@ -191,9 +174,3 @@ class ShapeletsPso:
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
         self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length] # ??
 
-        #print(f'optimal_split_distance: {self.best_particle.optimal_split_distance}')
-        #print(f'best_information_gain: {self.best_particle.best_information_gain}')
-        #print(f'length: {self.best_particle.length}')
-        #print(f'position: {self.best_particle.position}')
-        #print(f'velocity: {self.best_particle.velocity}')
-        #print(f'best_position: {self.best_particle.best_position}')

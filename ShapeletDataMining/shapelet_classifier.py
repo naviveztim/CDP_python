@@ -84,9 +84,7 @@ class ShapeletClassifier:
         step = step if step > 0 else 1
         num_classes = len(self.balanced_dataset['class_index'].unique())
         step = step if num_classes >= 4 else 1
-        # min(train_dataset['values'].explode()) # TODO: Restore?
         min_train_value = np.min(train_dataset.iloc[0]['values'])
-        # max(train_dataset['values'].explode()) # TODO: Restore?
         max_train_value = np.max(train_dataset.iloc[0]['values'])
         shapelet_pso = ShapeletsPso(min_length=min_length
                                     , max_length=max_length
@@ -99,7 +97,7 @@ class ShapeletClassifier:
         shapelet_pso.start_pso()
 
         # Fill shapelet parameters- shapelet values, the best info gain, optimal split distance
-        shapelet = Shapelet(values=shapelet_pso.best_particle.position[:shapelet_pso.best_particle.length]# TODO: Check if position or best_position
+        shapelet = Shapelet(values=shapelet_pso.best_particle.position[:shapelet_pso.best_particle.length]
                             , best_information_gain=shapelet_pso.best_particle.best_information_gain
                             , optimal_split_distance=shapelet_pso.best_particle.optimal_split_distance)
 

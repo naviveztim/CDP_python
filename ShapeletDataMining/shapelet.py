@@ -1,6 +1,6 @@
 import numpy as np
-import sys
 from math import isclose
+from Utils.logger import logger
 
 
 class Shapelet:
@@ -60,8 +60,8 @@ class Shapelet:
 
     def __repr__(self):
 
-        print(f'values: {self.values}')
-        print(f'optimal_split_distance: {self.optimal_split_distance}')
-        print(f'best_information_gain: {self.best_information_gain}')
-        print(f'left_class_index: {self.left_class_index}')
-        print(f'right_class_index: {self.right_class_index}')
+        logger.info(f'values: {self.values}')
+        logger.info(f'optimal_split_distance: {self.optimal_split_distance}')
+        logger.info(f'best_information_gain: {self.best_information_gain}')
+        logger.info(f'left_class_index: {self.left_class_index}')
+        logger.info(f'right_class_index: {self.right_class_index}')
