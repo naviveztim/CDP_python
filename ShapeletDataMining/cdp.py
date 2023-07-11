@@ -74,10 +74,10 @@ class CDP:
         #min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
 
         # Create patterns collection in format:
-        #  [(0, 'LLRLLLLRLLL')
-        # , (0, 'LLRRLLLRLLL')
-        # , (1, 'RRRLLRRRLLL')
-        # , (1, 'RRRRLRRRRLL')]
+        #  [(0, 'LLRLL...LLRLLL')
+        # , (0, 'LLRRL...LLRLLL')
+        # , (1, 'RRRLL...RRRLLL')
+        # , (1, 'RRRRL...RRRRLL')]
         for _, time_series in self.train_dataset.iterrows():
             self.patterns.append((time_series['class_index']
                                   , ''.join([classification_tree.build_classification_path(time_series)
