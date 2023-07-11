@@ -4,14 +4,13 @@ import os
 from collections import Counter
 from itertools import chain
 import numpy as np
-import math
 
 from ShapeletDataMining.shapelet import Shapelet
 from PSO.pso import ShapeletsPso
 from Utils.utils import subsequent_distance
 from Utils.btree import BTree
 from itertools import combinations, permutations
-from logger import logger
+from Utils.logger import logger
 
 
 class ShapeletClassifier:

@@ -2,11 +2,10 @@ import numpy as np
 import sys
 # from scipy.stats import entropy
 from collections import Counter
-import functools
 from math import log
 import pandas as pd
 import csv
-from logger import logger
+from Utils.logger import logger
 
 
 def similarity_coeff(s1: str, s2: str) -> int:

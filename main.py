@@ -1,7 +1,5 @@
-import numpy as np
 import argparse
 from ShapeletDataMining.cdp import CDP
-from logger import logger
 from Utils.utils import from_ucr_txt
 
 def get_arguments() -> argparse.Namespace:
