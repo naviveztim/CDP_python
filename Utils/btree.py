@@ -15,6 +15,7 @@ class BTree:
     def __init__(self, shapelet: Shapelet):
         self.root: BTree.Node = self.Node(shapelet)
         self.accuracy: float = 0.0
+        self.num_nodes = 1
 
     def build_classification_path(self, time_series: pd.Series) -> str:
 
@@ -45,6 +46,9 @@ class BTree:
                 else:
                     break
 
+        # Pad the answer
+        while len(path_string) < self.num_nodes:
+            path_string += "0"
         return path_string
 
     def add(self, node: Node, shapelet: Shapelet) -> bool:
@@ -64,17 +68,20 @@ class BTree:
             if node.left is None:
                 node.left = BTree.Node(shapelet)
                 node.depth += 1
+            self.num_nodes += 1
             return self.add(node.left, shapelet)
 
         elif compare_result == 1:
             if node.right is None:
                 node.right = BTree.Node(shapelet)
                 node.depth += 1
+            self.num_nodes += 1
             return self.add(node.right, shapelet)
 
         elif compare_result == -2:
             add_result = self.add(node.left, shapelet)
             if not compare_result:
+                self.num_nodes += 1
                 add_result = self.add(node.right, shapelet)
 
         return add_result

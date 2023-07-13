@@ -226,6 +226,7 @@ class ShapeletClassifier:
 
         # Filter the combinations to only keep those where each class appears equally
         valid_combs = []
+        old_condition = 0.0
         while not valid_combs or any(freq[class_] < num_allowed_indexes for class_ in list(chain(*valid_combs))):
             for comb in combs:
                 freq = Counter(list(chain(*valid_combs)))
@@ -236,8 +237,9 @@ class ShapeletClassifier:
                 condition1 = num_allowed_indexes*num_class_indexes
                 condition2 = sum(freq.values())
                 condition = (condition1 - condition2) / condition1
-                if condition < 0.01:
+                if abs(condition - old_condition) < 1e-6:
                     return valid_combs
+                old_condition = condition
 
         return valid_combs
 

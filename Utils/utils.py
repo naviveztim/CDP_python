@@ -9,7 +9,7 @@ from Utils.logger import logger
 
 
 def similarity_coeff(s1: str, s2: str) -> int:
-    """ Find similarity cieficient beween two strings with equal length"""
+    """ Find similarity coefficient between two strings with equal length"""
     if len(s1) != len(s2):
         raise Exception("The patterns have different length!")
 

@@ -168,9 +168,9 @@ class ShapeletsPso:
             logger.info(f'Old best gain: {old_best_gain}')
             logger.info(f'New best gain {new_best_gain}')
 
-
             if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
                 break
+
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
         self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length] # ??
 
