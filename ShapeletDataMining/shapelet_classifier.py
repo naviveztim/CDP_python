@@ -226,20 +226,23 @@ class ShapeletClassifier:
 
         # Filter the combinations to only keep those where each class appears equally
         valid_combs = []
-        old_condition = 0.0
-        while not valid_combs or any(freq[class_] < num_allowed_indexes for class_ in list(chain(*valid_combs))):
+        num_iterations = 0
+        # The max number of iterations is set to 2000 artificially as in some cases
+        # the output cannot contain all the numbers uniformly distributed and the cycle never ends.
+        while not valid_combs \
+            or any(freq[class_] < num_allowed_indexes for class_ in list(chain(*valid_combs)))\
+                and num_iterations < 2000:
+            num_iterations += 1
             for comb in combs:
                 freq = Counter(list(chain(*valid_combs)))
-                if all(freq[class_] < num_allowed_indexes for class_ in comb):
+                if not valid_combs:
                     valid_combs.append(comb)
+                else:
+                    if all(freq[class_] < num_allowed_indexes for class_ in comb)\
+                            and any(freq[class_] == min(freq.values()) for class_ in comb):
+                        valid_combs.append(comb)
                 # The numbers in combinations can  be almost uniformly distributed-
                 # aka one or two numbers might differ
-                condition1 = num_allowed_indexes*num_class_indexes
-                condition2 = sum(freq.values())
-                condition = (condition1 - condition2) / condition1
-                if abs(condition - old_condition) < 1e-6:
-                    return valid_combs
-                old_condition = condition
 
         return valid_combs
 
