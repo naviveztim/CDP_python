@@ -4,9 +4,8 @@ import os
 from collections import Counter
 from itertools import chain
 import numpy as np
-
 from ShapeletDataMining.shapelet import Shapelet
-from PSO.pso import ShapeletsPso
+from ShapeletDataMining.pso import ShapeletsPso
 from Utils.utils import subsequent_distance
 from Utils.btree import BTree
 from itertools import combinations, permutations
@@ -101,7 +100,7 @@ class ShapeletClassifier:
                             , best_information_gain=shapelet_pso.best_particle.best_information_gain
                             , optimal_split_distance=shapelet_pso.best_particle.optimal_split_distance)
 
-        # Fill shapelet parameters- left and right class indexes of the shapelet
+        # Fill shapelet parameters-left and right class indexes of the shapelet
         self._split_classes(shapelet, class_index_a, class_index_b, train_dataset)
 
         return shapelet

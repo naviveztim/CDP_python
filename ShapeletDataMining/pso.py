@@ -10,17 +10,6 @@ compares several candidate shapelets in a swarm. As result select the one which
 maximally separate two classes."""
 
 
-class CircularListIterator:
-
-    def __init__(self):
-        self.float_list = [0.25, 0.71, 0.22, 0.12, 0.43, 0.03]
-        self.index = -1
-
-    def random(self) -> float:
-        self.index = (self.index + 1) % len(self.float_list)
-        return self.float_list[self.index]
-
-
 class CandidateShapelet:
 
     def __init__(self
@@ -71,7 +60,6 @@ class ShapeletsPso:
         self.max_particle_length: int = max_length
         self.step: int = step
         self.train_dataframe: pd.DataFrame = train_dataframe
-        #self.rand = CircularListIterator() # TEST # TODO: TEST
 
         # Init best particle
         self.best_particle: CandidateShapelet = CandidateShapelet(max_length

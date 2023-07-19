@@ -1,2 +1,3 @@
-# CDP_python
-Concatenation Decision Paths implementation in python 
+# 
+Concatenation Decision Paths (CDP)- fast and accurate method for time series classification 
+

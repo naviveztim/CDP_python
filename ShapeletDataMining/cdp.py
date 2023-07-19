@@ -66,8 +66,6 @@ class CDP:
 
         # Create patterns collection in format:
         #  [(0, 'LLRLL...LLRLLL')
-        # , (0, 'LLRRL...LLRLLL')
-        # , (1, 'RRRLL...RRRLLL')
         # , (1, 'RRRRL...RRRRLL')]
         for _, time_series in self.train_dataset.iterrows():
             self.patterns.append((time_series['class_index']

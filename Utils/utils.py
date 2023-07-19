@@ -1,6 +1,5 @@
 import numpy as np
 import sys
-# from scipy.stats import entropy
 from collections import Counter
 from math import log
 import pandas as pd
