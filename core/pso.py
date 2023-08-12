@@ -1,17 +1,13 @@
 import sys
 import numpy as np
 import random
-from Utils import utils
-from Utils.logger import logger
+from utils import utils
+from utils.logger import logger
 import pandas as pd
-
-""" Implementation of Particle Swarm Optimization (PSO) algorithm- 
-compares several candidate shapelets in a swarm. As result select the one which 
-maximally separate two classes."""
 
 
 class CandidateShapelet:
-
+    """ Shapelet candidate implementation"""
     def __init__(self
                  , length: int
                  , min_velocity: int, max_velocity: int
@@ -34,6 +30,9 @@ class CandidateShapelet:
 
 
 class ShapeletsPso:
+    """ Implementation of Particle Swarm Optimization (PSO) algorithm
+        compares several candidate shapelets in a swarm. As result select the one which
+        maximally separate two classes."""
 
     # PSO constants, according to: http://msdn.microsoft.com/en-us/magazine/hh335067.aspx
     W = 0.729  # inertia weight
@@ -152,13 +151,13 @@ class ShapeletsPso:
 
             old_best_gain = new_best_gain
             new_best_gain = self.best_particle.best_information_gain
-            logger.info(f'Iteration: {iteration}')
-            logger.info(f'Old best gain: {old_best_gain}')
-            logger.info(f'New best gain {new_best_gain}')
+            logger.debug(f'Iteration: {iteration}')
+            logger.debug(f'Old best gain: {old_best_gain}')
+            logger.debug(f'New best gain {new_best_gain}')
 
             if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
                 break
 
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
-        self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length] # ??
+        self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length]
 

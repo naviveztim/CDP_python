@@ -1,6 +1,6 @@
-from ShapeletDataMining.shapelet import Shapelet
+from core.shapelet import Shapelet
 import pandas as pd
-from Utils.utils import subsequent_distance
+from utils.utils import subsequent_distance
 
 
 class BTree:

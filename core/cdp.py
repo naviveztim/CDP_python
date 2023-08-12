@@ -1,15 +1,18 @@
+import os.path
+import pickle
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from Utils import utils
-from Utils.logger import logger
-from ShapeletDataMining.shapelet_classifier import ShapeletClassifier
-from Utils.btree import BTree
+from utils import utils
+from utils.logger import logger
+from core.shapelet_classifier import ShapeletClassifier
+import csv
+MODEL_FILENAME = 'cdp_model.pickle'
+PATTERNS_FILE_NAME = 'patterns.csv'
 
 
 class CDP:
-
-    """ Main class of Concatenated Decision Paths (CDP) method implementation"""
+    """ Concatenated Decision Paths (CDP) method implementation"""
 
     def __init__(self
                  , dataset: pd.DataFrame
@@ -24,14 +27,17 @@ class CDP:
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
         self.train_dataset = dataset
-        self.patterns: list[str] = []
-        self.classification_trees: list[BTree] = []
+        self.patterns: list[tuple] = []
+        self.classification_trees = dict()
         self.compression_factor = compression_factor
         self.normalize = normalize
         self.original_or_derivate = original_or_derivate
         self._process_dataset(self.train_dataset)
 
     def _process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
+
+        if dataset is None or dataset.empty:
+            return
 
         # Apply compression on time series values
         if self.compression_factor > 1:
@@ -51,33 +57,108 @@ class CDP:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: (x - np.mean(x)) / np.std(x))
 
-    def fit(self):
+    def _load_patterns(self, csv_file_path):
+        # Initialize an empty list to store the loaded data
+        self.patterns = []
+
+        # Read the data from the CSV file
+        with open(csv_file_path, mode='r') as file:
+            reader = csv.DictReader(file)
+
+            # Assuming the column headers are 'class_index' and 'class_pattern'
+            for row in reader:
+                class_index = int(row['class_index'])
+                class_pattern = row['class_pattern']
+                self.patterns.append((class_index, class_pattern))
+
+    def _save_patterns(self, csv_file_path):
+        # Load patterns from file
+        headers = ['class_index', 'class_pattern']
+
+        # Write the data to the CSV file
+        with open(csv_file_path, mode='w', newline='') as file:
+            writer = csv.writer(file)
+
+            # Write the header row
+            writer.writerow(headers)
+
+            # Write the data rows
+            for row in self.patterns:
+                writer.writerow(row)
+
+    def _save_classification_trees(self, model_folder_path: str):
+
+        with open(os.path.join(model_folder_path, MODEL_FILENAME), 'wb') as file:
+            pickle.dump(self.classification_trees, file)
+
+    def _load_classification_trees(self, model_folder_path: str) -> dict:
+
+        try:
+            with open(os.path.join(model_folder_path, MODEL_FILENAME), 'rb') as file:
+                self.classification_trees = pickle.load(file)
+        except Exception as e:
+            self.classification_trees = dict()
+
+    @utils.try_except
+    def load_model(self, model_folder: str):
+
+        # Load model
+        self._load_classification_trees(model_folder)
+
+        # Load saved patterns
+        self._load_patterns(os.path.join(model_folder, PATTERNS_FILE_NAME))
+
+        # Sanity check
+        for pattern in self.patterns:
+           logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
+
+    @utils.try_except
+    def fit(self, model_folder: str = None):
+
+        """ Fills the dictionary with classification trees. If model exists, tries to reuse
+        trees if compatible with input arguments requirements"""
+
+        logger.info(f"Training...")
 
         shapelet_classifier = ShapeletClassifier(dataset=self.train_dataset
                                                  , classifiers_folder=self.classifiers_folder
                                                  , num_classes_per_tree=self.num_classes_per_tree
                                                  , pattern_length=self.pattern_length)
 
-        # Define and train number of specified classification trees
-        self.classification_trees = shapelet_classifier.create_and_train_classifiers()
+        # Load existing classifiers
+        self._load_classification_trees(model_folder)
+
+        # Add new classifiers, if required
+        shapelet_classifier.create_and_train_classifiers(self.classification_trees)
+
+        # Save all classifiers
+        self._save_classification_trees(model_folder)
 
         # Take equal number of samples from every class index
         #min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
 
-        # Create patterns collection in format:
+        # Create patterns in format:
         #  [(0, 'LLRLL...LLRLLL')
+        # ....
         # , (1, 'RRRRL...RRRRLL')]
         for _, time_series in self.train_dataset.iterrows():
             self.patterns.append((time_series['class_index']
                                   , ''.join([classification_tree.build_classification_path(time_series)
-                                             for classification_tree in self.classification_trees])))
-        # Sanity check
-        for pattern in self.patterns:
-            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
+                                             for classification_tree in self.classification_trees.values()])))
 
+        # Save patterns
+        self._save_patterns(os.path.join(model_folder, PATTERNS_FILE_NAME))
+
+        # Sanity check
+        #for pattern in self.patterns:
+        #    logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
+
+    @utils.try_except
     def predict(self, dataset: pd.DataFrame) -> list:
 
-        """ Predict indexes of given time series """
+        """ Predict indexes of given time series datset"""
+
+        logger.info(f"Predicting...")
 
         # Apply pre-processing, already applied to train dataset
         self._process_dataset(dataset)
@@ -89,8 +170,7 @@ class CDP:
 
             # Find the pattern for given time series
             pattern = ''.join([classification_tree.build_classification_path(time_series)
-                               for classification_tree in self.classification_trees])
-                      # ''.join(self.classification_trees.build_classification_path(time_series))
+                               for classification_tree in self.classification_trees.values()])
 
             # Find similarity between found pattern and saved during training
             similarities = [(i, utils.similarity_coeff(pattern, s)) for i, s in self.patterns]

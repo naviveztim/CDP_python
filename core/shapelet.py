@@ -1,6 +1,6 @@
 import numpy as np
 from math import isclose
-from Utils.logger import logger
+from utils.logger import logger
 
 
 class Shapelet:

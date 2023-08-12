@@ -4,8 +4,18 @@ from collections import Counter
 from math import log
 import pandas as pd
 import csv
-from Utils.logger import logger
+from utils.logger import logger
 
+
+def try_except(func):
+    def wrapper(*args, **kwargs):
+        try:
+            result = func(*args, **kwargs)
+        except Exception as e:
+            print(f"An exception occurred: {e}")
+            result = None
+        return result
+    return wrapper
 
 def similarity_coeff(s1: str, s2: str) -> int:
     """ Find similarity coefficient between two strings with equal length"""
@@ -93,6 +103,9 @@ def from_ucr_txt(filepath: str, delimiter: str = ',') -> pd.DataFrame:
     """ UCR dataset format is a pure text format where every row starts
     with time series index and is followed by value of the time series. The lengths of those time series
     might not be the same"""
+
+    if not filepath:
+        return None
 
     pdf = pd.DataFrame(columns=['class_index', 'values'])
     with open(filepath) as csv_file:

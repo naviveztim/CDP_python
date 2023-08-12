@@ -1,15 +1,16 @@
 import pandas as pd
 import pickle
 import os
+import logging
 from collections import Counter
 from itertools import chain
 import numpy as np
-from ShapeletDataMining.shapelet import Shapelet
-from ShapeletDataMining.pso import ShapeletsPso
-from Utils.utils import subsequent_distance
-from Utils.btree import BTree
+from core.shapelet import Shapelet
+from core.pso import ShapeletsPso
+from utils.utils import subsequent_distance
+from utils.btree import BTree
 from itertools import combinations, permutations
-from Utils.logger import logger
+from utils.logger import logger
 
 
 class ShapeletClassifier:
@@ -23,15 +24,14 @@ class ShapeletClassifier:
         self.classifiers_folder = classifiers_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        # Balance training dataset-take 10 samples from each class
         self.balanced_dataset = pd.DataFrame()
-        for i in dataset['class_index'].unique():
-            self.balanced_dataset = \
-                pd.concat([self.balanced_dataset,
-                           dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
-                           ])
+        if dataset is not None and not dataset.empty:
+            for i in dataset['class_index'].unique():
+                self.balanced_dataset = \
+                    pd.concat([self.balanced_dataset,
+                               dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
+                               ])
         self.balanced_dataset = self.balanced_dataset.reset_index().drop(columns=['index'])
-        self.loaded_tree_names: list = []
 
     @staticmethod
     def _build_tree(permutation: tuple):
@@ -105,51 +105,29 @@ class ShapeletClassifier:
 
         return shapelet
 
-    def _get_serialized_name(self, classes_in_combination: tuple):
+    def _get_required_classificators_names(self, group: list):
 
-        """ Build filename for serialization """
-        base_name = os.path.join(
-            self.classifiers_folder
-            , "Classificatin_tree_" + "_".join([str(x) for x in classes_in_combination]))
-        extension = '.pickle'
+        required_classificators_names = {}
+        for combination in group:
 
-        # Make unique filename
-        counter = 1
-        unique_filename = base_name + extension
-        while unique_filename in self.loaded_tree_names:
-            unique_filename = f"{base_name}_({counter}){extension}"
-            counter += 1
+            # Check if classifier with such name already exists
+            base_name = os.path.join(
+                self.classifiers_folder
+                , "Classificatin_tree_" + "_".join([str(x) for x in combination]))
+            extension = '.pickle'
 
-        return unique_filename
+            # Make unique filename
+            counter = 1
+            unique_filename = base_name + extension
+            while unique_filename in required_classificators_names:
+                unique_filename = f"{base_name}_({counter}){extension}"
+                counter += 1
 
-    def _generate_serialization_name(self, classes_in_combination: list):
+            required_classificators_names[unique_filename] = combination
 
-        """ Build filename for serialization """
-        base_name = os.path.join(
-            self.classifiers_folder
-            , "Classificatin_tree_" + "_".join([str(x) for x in classes_in_combination]))
-        extension = '.pickle'
+        return required_classificators_names
 
-        # Make unique filename
-        counter = 1
-        unique_filename = base_name + extension
-        while os.path.isfile(unique_filename):
-            unique_filename = f"{base_name}_({counter}){extension}"
-            counter += 1
-
-        return unique_filename
-
-    def _serialize_tree(self, tree: BTree, classes_in_combination: list, classifier_file_name: str):
-
-        """ Serialize best tree into classification folder"""
-
-        #classifier_file_name = self._generate_serialization_name(classes_in_combination)
-
-        # Write the serialized classifier to a file
-        with open(classifier_file_name, 'wb') as file:
-            pickle.dump(tree, file)
-
-    def _test_tree_accuracy(self, tree: BTree, classes_in_combination: list):
+    def _test_tree_accuracy(self, tree: BTree, classes_in_combination: tuple):
 
         """ Finds average accuracy of given classification tree
             """
@@ -245,27 +223,16 @@ class ShapeletClassifier:
 
         return valid_combs
 
-    def _load_tree(self, classes_in_combination: list) -> BTree:
-        """ Deserialize classification tree from disk """
-        classifier_file_name = self._get_serialized_name(classes_in_combination)
-
-        try:
-            # Read serialized classifier from file
-            with open(classifier_file_name, 'rb') as file:
-                serialized_tree = pickle.load(file)
-        except FileNotFoundError:
-            return None, classifier_file_name
-
-        return serialized_tree, classifier_file_name
-
-    def _train_and_save_tree(self, classes_in_combination: tuple, classifier_file_name:str) -> BTree:
+    def _create_and_train_tree(self, classes_in_combination: tuple) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""
         shapelets = []
-        combination_indexes = [(x, y) for x in classes_in_combination for y in classes_in_combination if x < y]
+
+        # Split combination of classes to all possible two classes combinations
+        two_classes_combinations = list(combinations(classes_in_combination, 2))
 
         # Collect shapelets that split combinations of two classes
-        for c in combination_indexes:
+        for c in two_classes_combinations:
             class_index_a, class_index_b = c
             shapelet = self._find_shapelet(class_index_a, class_index_b)
 
@@ -275,38 +242,35 @@ class ShapeletClassifier:
                and shapelet.right_class_index != shapelet.left_class_index:
                 shapelets.append(shapelet)
 
-        # Find tree, that gives highest accuracy for given combination of class indexes
+        # Find tree, that gives the best accuracy for given combination of class indexes
         best_tree = self._find_most_accurate_tree(shapelets, classes_in_combination)
-
-        # Serialize tree to disk
-        self._serialize_tree(best_tree, classes_in_combination, classifier_file_name)
 
         return best_tree
 
-    def create_and_train_classifiers(self) -> list:
+    def create_and_train_classifiers(self, classification_trees: dict):
 
-        """ Create, train and save all required classifier for given pattern length"""
+        """ Create, train group of classifiers defined by input arguments """
 
-        classifiers = []
-
-        # Take possible combination of class indexes based on
-        # num. classes per tree and required pattern length
+        # Find needed combination of classes, defined by input arguments
         group = self._create_group()
         logger.debug(group)
 
-        for combination in group:
-            # Check if classifier already exists
-            classifier, classifier_file_name = self._load_tree(combination)
+        # Get newly required classifiers- filename: class combination
+        required_trees = self._get_required_classificators_names(group)
 
-            # Train and save, if not exists
-            if not classifier:
-                classifier = self._train_and_save_tree(combination, classifier_file_name)
+        # Define trees to be created
+        classifiers_file_names = [x for x in required_trees if x not in classification_trees]
 
-            classifiers.append(classifier)
+        # Create classification tree
+        for i, classifier_file_name in enumerate(classifiers_file_names):
+            if classifier_file_name:
+                classification_trees[classifier_file_name] = \
+                    self._create_and_train_tree(classes_in_combination=required_trees[classifier_file_name])
+                # Training progress
+                logger.info(f"Training classifier {i+1}/{len(classifiers_file_names)}")
 
-            self.loaded_tree_names.append(classifier_file_name)
 
-        return classifiers
+
 
 
 
