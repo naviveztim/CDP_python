@@ -3,8 +3,9 @@ import sys
 from collections import Counter
 from math import log
 import pandas as pd
-import csv
 from utils.logger import logger
+import csv
+import fileinput
 
 
 def try_except(func):
@@ -16,6 +17,7 @@ def try_except(func):
             result = None
         return result
     return wrapper
+
 
 def similarity_coeff(s1: str, s2: str) -> int:
     """ Find similarity coefficient between two strings with equal length"""
@@ -98,7 +100,21 @@ def calculate_information_gain(distances: list):
     return information_gain, optimal_split_distance, optimal_entropy
 
 
-def from_ucr_txt(filepath: str, delimiter: str = ',') -> pd.DataFrame:
+def to_ucr(pdf: pd.DataFrame, predicted_indexes: list, filepath: str, delimiter: str = ', '):
+
+    pdf['class_index'] = predicted_indexes
+
+    # Convert list values to comma-separated strings
+    pdf['values'] = pdf['values'].apply(lambda x: delimiter.join(map(str, x)))
+
+    # Save the DataFrame as a CSV file without column names
+    pdf.to_csv(filepath, index=False, header=False, quoting=csv.QUOTE_NONE,  escapechar=' ')
+
+    # Remove spaces in csv file
+    for line in fileinput.input(filepath, inplace=True):
+        sys.stdout.write(line.replace(' ', ''))
+
+def from_ucr(filepath: str, delimiter: str = ',', index=True) -> pd.DataFrame:
 
     """ UCR dataset format is a pure text format where every row starts
     with time series index and is followed by value of the time series. The lengths of those time series
@@ -111,11 +127,13 @@ def from_ucr_txt(filepath: str, delimiter: str = ',') -> pd.DataFrame:
     with open(filepath) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=delimiter)
         for row in csv_reader:
-            pdf = pdf.append({'class_index': int(row[0])
-                              , 'values': [float(x) for x in row[1:]]}
+            class_index = int(row[0]) if index else -1
+            start_index = 1 if index else 0
+            pdf = pdf.append({'class_index': class_index
+                              , 'values': [float(x) for x in row[start_index:]]}
                               , ignore_index=True)
 
-    logger.debug(f'Number of train samples: {pdf.shape[0]}')
+    logger.debug(f'Number of samples: {pdf.shape[0]}')
     return pdf
 
 

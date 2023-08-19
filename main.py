@@ -1,6 +1,8 @@
 import argparse
+import os.path
+
 from core.cdp import CDP
-from utils.utils import from_ucr_txt
+from utils.utils import from_ucr, to_ucr
 from utils.logger import logger
 import timeit
 
@@ -10,14 +12,18 @@ def get_arguments() -> argparse.Namespace:
     """ Parses command line arguments """
 
     parser = argparse.ArgumentParser(description='Time series classification, based on CDP method')
-    parser.add_argument('-train_dir', '--train_dir', help='Specify folder with train dataset', required=False)
-    parser.add_argument('-model_dir', '--model_dir', help='Specify folder where classifiers will be stored'
-                        , required=True)
-    parser.add_argument('-test_dir', '--test_dir', help='Specify folder with test dataset', required=False)
+    parser.add_argument('-train', '--train', help='Specify csv file with train samples'
+                        , required=False)
+    parser.add_argument('-predict', '--predict', help='Specify csv file with samples to predict'
+                        , required=False)
+    parser.add_argument('-test', '--test', help='Specify csv file with test samples'
+                        , required=False)
+    parser.add_argument('-model_folder', '--model_folder', help='Specify folder where classifiers will be stored'
+                        , required=False)
     parser.add_argument('-delimiter', '--delimiter', help='Delimiter used in dataset. Default: comma.'
                         , required=False, default=',')
-    parser.add_argument('-compress', '--compress', help='Compression factor. Default: 1 (No compression)', required=False
-                        , default=1)
+    parser.add_argument('-compress', '--compress', help='Compression factor. Default: 1 (No compression)'
+                        , required=False, default=1)
     parser.add_argument('-signal', '--signal', help='Use original signal or its derivative. Default: Original signal'
                         , required=False, default='s', choices=['s', 'd', 'S', 'D'])
     parser.add_argument('-normalize', '--normalize', help='Normalize the original signal? Default: Do not normalize'
@@ -25,7 +31,7 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument('-nodes', '--nodes', help='Specify number of nodes in decision tree. Default: 2'
                         , required=False, default=2)
     parser.add_argument('-trees', '--trees', help='Specify number decision trees.'
-                        , required=True, default=100)
+                        , required=False, default=100)
 
     try:
         args = parser.parse_args()
@@ -40,10 +46,10 @@ def get_arguments() -> argparse.Namespace:
 def show_arguments(args: argparse.Namespace):
 
     """ Displays picked arguments """
-
-    logger.info(f'Train folder: {args.train_dir}')
-    logger.info(f'Model folder: {args.model_dir}')
-    logger.info(f'Test folder: {args.test_dir}')
+    logger.info(f'Train csv: {args.train}')
+    logger.info(f'Model folder: {args.model_folder}')
+    logger.info(f'Test csv: {args.test}')
+    logger.info(f'Predict csv: {args.predict}')
     logger.info(f'Delimiter: {args.delimiter}')
     logger.info(f'Compress factor: {args.compress}')
     logger.info(f'Signal/Derivative?(S/D): {args.signal}')
@@ -56,15 +62,15 @@ def main():
     # Get command line arguments
     args = get_arguments()
 
-    # Display entered arguments
+    # Display arguments
     show_arguments(args)
 
-    # Obtain train dataset
-    train_dataset = from_ucr_txt(args.train_dir, args.delimiter) if args.train_dir else None
+    # Obtain train dataset from csv file
+    train_dataset = from_ucr(args.train, args.delimiter) if args.train else None
 
     # Initialize CDP
     cdp = CDP(dataset=train_dataset
-              , classifiers_folder=args.model_dir
+              , model_folder=args.model_folder
               , num_classes_per_tree=int(args.nodes)
               , pattern_length=int(args.trees)
               , compression_factor=int(args.compress)
@@ -72,16 +78,32 @@ def main():
               , normalize=args.normalize)
 
     # Train/Load the model
-    if args.train_dir:
-        cdp.fit(args.model_dir)
+    if args.train:
+        cdp.fit(args.model_folder)
     else:
-        cdp.load_model(args.model_dir)
+        cdp.load_model(args.model_folder)
 
-    # Test accuracy
-    if args.test_dir:
+    if args.predict:
 
         # Obtain test dataset
-        test_dataset = from_ucr_txt(args.test_dir, delimiter=',')
+        dataset = from_ucr(args.predict, delimiter=',', index=False)
+
+        # Predict class indexes of a test dataset
+        predicted_class_indexes = cdp.predict(dataset)
+
+        # Format result filename
+        original_filename = os.path.splitext(os.path.basename(args.predict))[0]
+        directory_path = os.path.dirname(args.predict)
+        output_filepath = os.path.join(directory_path, original_filename + '_predicted.csv')
+
+        # Save results in UCR format
+        to_ucr(dataset, predicted_class_indexes, output_filepath)
+
+    # Test accuracy
+    if args.test:
+
+        # Obtain test dataset
+        test_dataset = from_ucr(args.test, delimiter=',')
 
         # Predict class indexes of a test dataset
         predicted_class_indexes = cdp.predict(test_dataset)

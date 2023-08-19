@@ -16,14 +16,14 @@ class CDP:
 
     def __init__(self
                  , dataset: pd.DataFrame
-                 , classifiers_folder: str
+                 , model_folder: str
                  , num_classes_per_tree: int
                  , pattern_length: int
                  , compression_factor: int = None
                  , original_or_derivate: str = None
                  , normalize: bool = False):
 
-        self.classifiers_folder = classifiers_folder
+        self.model_folder = model_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
         self.train_dataset = dataset
@@ -121,7 +121,7 @@ class CDP:
         logger.info(f"Training...")
 
         shapelet_classifier = ShapeletClassifier(dataset=self.train_dataset
-                                                 , classifiers_folder=self.classifiers_folder
+                                                 , classifiers_folder=self.model_folder
                                                  , num_classes_per_tree=self.num_classes_per_tree
                                                  , pattern_length=self.pattern_length)
 
@@ -159,14 +159,15 @@ class CDP:
         """ Predict indexes of given time series datset"""
 
         logger.info(f"Predicting...")
+        processed_dataset = dataset.copy()
 
         # Apply pre-processing, already applied to train dataset
-        self._process_dataset(dataset)
+        self._process_dataset(processed_dataset)
 
         predicted_class_indexes = []
 
         # Classify by comparing decision patterns
-        for _, time_series in dataset.iterrows():
+        for _, time_series in processed_dataset.iterrows():
 
             # Find the pattern for given time series
             pattern = ''.join([classification_tree.build_classification_path(time_series)
