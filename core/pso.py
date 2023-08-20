@@ -15,8 +15,8 @@ class CandidateShapelet:
         self.optimal_split_distance: float = 0.0
         self.best_information_gain: float = sys.float_info.min
         self.length: int = length
-        self.position: np.array = np.array([random.gauss(min_position, max_position) for _ in range(length)]) #np.zeros(length) #
-        self.velocity: np.array = np.array([random.gauss(min_velocity, max_velocity) for _ in range(length)]) #np.zeros(length)
+        self.position: np.array = np.array([random.uniform(min_position, max_position) for _ in range(length)])
+        self.velocity: np.array = np.array([random.uniform(min_velocity, max_velocity) for _ in range(length)])
         self.best_position: np.array = self.position
 
     def copy(self, candidate):

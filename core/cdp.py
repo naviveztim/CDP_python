@@ -20,7 +20,7 @@ class CDP:
                  , num_classes_per_tree: int
                  , pattern_length: int
                  , compression_factor: int = None
-                 , original_or_derivate: str = None
+                 , derivative: bool = False
                  , normalize: bool = False):
 
         self.model_folder = model_folder
@@ -31,7 +31,7 @@ class CDP:
         self.classification_trees = dict()
         self.compression_factor = compression_factor
         self.normalize = normalize
-        self.original_or_derivate = original_or_derivate
+        self.derivative = derivative
         self._process_dataset(self.train_dataset)
 
     def _process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
@@ -48,12 +48,12 @@ class CDP:
                                              .tolist()[::2])
 
         # Take original/derivative time series values
-        if self.original_or_derivate == 'D' or self.original_or_derivate == 'd':
+        if self.derivative:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
 
         # Apply normalization
-        if self.normalize == 'Y' or self.normalize == 'y':
+        if self.normalize:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: (x - np.mean(x)) / np.std(x))
 
@@ -100,20 +100,20 @@ class CDP:
             self.classification_trees = dict()
 
     @utils.try_except
-    def load_model(self, model_folder: str):
+    def load_model(self):
 
         # Load model
-        self._load_classification_trees(model_folder)
+        self._load_classification_trees(self.model_folder)
 
         # Load saved patterns
-        self._load_patterns(os.path.join(model_folder, PATTERNS_FILE_NAME))
+        self._load_patterns(os.path.join(self.model_folder, PATTERNS_FILE_NAME))
 
         # Sanity check
         for pattern in self.patterns:
            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     @utils.try_except
-    def fit(self, model_folder: str = None):
+    def fit(self):
 
         """ Fills the dictionary with classification trees. If model exists, tries to reuse
         trees if compatible with input arguments requirements"""
@@ -126,13 +126,13 @@ class CDP:
                                                  , pattern_length=self.pattern_length)
 
         # Load existing classifiers
-        self._load_classification_trees(model_folder)
+        self._load_classification_trees(self.model_folder)
 
         # Add new classifiers, if required
         shapelet_classifier.create_and_train_classifiers(self.classification_trees)
 
         # Save all classifiers
-        self._save_classification_trees(model_folder)
+        self._save_classification_trees(self.model_folder)
 
         # Take equal number of samples from every class index
         #min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
@@ -147,7 +147,7 @@ class CDP:
                                              for classification_tree in self.classification_trees.values()])))
 
         # Save patterns
-        self._save_patterns(os.path.join(model_folder, PATTERNS_FILE_NAME))
+        self._save_patterns(os.path.join(self.model_folder, PATTERNS_FILE_NAME))
 
         # Sanity check
         #for pattern in self.patterns:

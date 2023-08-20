@@ -1,6 +1,5 @@
 import argparse
 import os.path
-
 from core.cdp import CDP
 from utils.utils import from_ucr, to_ucr
 from utils.logger import logger
@@ -24,10 +23,10 @@ def get_arguments() -> argparse.Namespace:
                         , required=False, default=',')
     parser.add_argument('-compress', '--compress', help='Compression factor. Default: 1 (No compression)'
                         , required=False, default=1)
-    parser.add_argument('-signal', '--signal', help='Use original signal or its derivative. Default: Original signal'
-                        , required=False, default='s', choices=['s', 'd', 'S', 'D'])
+    parser.add_argument('-derivative', '--derivative', help='Use original signal or its derivative. Default: Original signal'
+                        , required=False, action='store_true')
     parser.add_argument('-normalize', '--normalize', help='Normalize the original signal? Default: Do not normalize'
-                        , required=False, default='n', choices=['n', 'N', 'y', 'Y'])
+                        , required=False, action='store_true')
     parser.add_argument('-nodes', '--nodes', help='Specify number of nodes in decision tree. Default: 2'
                         , required=False, default=2)
     parser.add_argument('-trees', '--trees', help='Specify number decision trees.'
@@ -52,8 +51,8 @@ def show_arguments(args: argparse.Namespace):
     logger.info(f'Predict csv: {args.predict}')
     logger.info(f'Delimiter: {args.delimiter}')
     logger.info(f'Compress factor: {args.compress}')
-    logger.info(f'Signal/Derivative?(S/D): {args.signal}')
-    logger.info(f'Normalize?(Y/N): {args.normalize}')
+    logger.info(f'Derivative?: {args.derivative}')
+    logger.info(f'Normalize?: {args.normalize}')
     logger.info(f'Number of nodes in tree: {args.nodes}')
     logger.info(f'Number of trees in decision pattern: {args.trees}')
 
@@ -74,14 +73,14 @@ def main():
               , num_classes_per_tree=int(args.nodes)
               , pattern_length=int(args.trees)
               , compression_factor=int(args.compress)
-              , original_or_derivate=args.signal
+              , derivative=args.derivative
               , normalize=args.normalize)
 
     # Train/Load the model
     if args.train:
-        cdp.fit(args.model_folder)
+        cdp.fit()
     else:
-        cdp.load_model(args.model_folder)
+        cdp.load_model()
 
     if args.predict:
 
