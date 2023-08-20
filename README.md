@@ -17,11 +17,11 @@ Fig. 1 Comparison of classifiers' accuracy
 
 <pre>
 # Obtain train dataset from UCR format file
-train_dataset = from_ucr(filepath=<train file path>, delimiter=<delimiter>)
+train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<delimiter>)
 
 # Initialize CDP
 cdp = CDP(dataset=train_dataset
-          , model_folder=<model folder path>
+          , model_folder=<'model folder path'>
           , num_classes_per_tree=2
           , pattern_length=100
           , compression_factor=1
@@ -36,7 +36,7 @@ cdp.fit()
 <pre>
 # Initialize CDP
 cdp = CDP(dataset=None
-          , model_folder=<model folder path>
+          , model_folder=<'model folder path'>
           , num_classes_per_tree=2
           , pattern_length=100
           , compression_factor=1
@@ -47,7 +47,7 @@ cdp = CDP(dataset=None
 cdp.load_model()
 
 # Obtain test dataset from UCR format file 
-test_dataset = from_ucr(<test file path>, delimiter=',')
+test_dataset = from_ucr(<'test file path'>, delimiter=',')
 
 # Predict class indexes of a test dataset
 predicted_class_indexes = cdp.predict(test_dataset)
