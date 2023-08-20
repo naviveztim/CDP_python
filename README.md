@@ -17,7 +17,7 @@ Fig. 1 Comparison of classifiers' accuracy
 
 <pre>
 # Obtain train dataset from UCR format file
-train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<delimiter>)
+train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<'delimiter'>)
 
 # Initialize CDP
 cdp = CDP(dataset=train_dataset
