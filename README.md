@@ -9,6 +9,7 @@ Python implementation of the CDP algorithm posses following advantages:
 - python implementation does not depend on other machine learning package. It has only dependencies on standard python packages
 
 ![Accuracy comparison](Accuracy_comparison.png)
+
 Fig. 1 Comparison of classifiers' accuracy  
 
 ### Installation 
