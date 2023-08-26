@@ -11,8 +11,8 @@ class CandidateShapelet:
     """ Shapelet candidate implementation"""
     def __init__(self
                  , length: int
-                 , min_velocity: int, max_velocity: int
-                 , min_position: int, max_position: int):
+                 , min_velocity: float, max_velocity: float
+                 , min_position: float, max_position: float):
         self.optimal_split_distance: float = 0.0
         self.best_information_gain: float = sys.float_info.min
         self.length: int = length
