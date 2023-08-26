@@ -1,7 +1,8 @@
 import sys
 import numpy as np
 import random
-from utils import utils
+from utils.utils import subsequent_distance\
+                        , calculate_information_gain, assess_candidate_position
 from utils.logger import logger
 import pandas as pd
 
@@ -58,7 +59,8 @@ class ShapeletsPso:
         self.min_particle_length: int = min_length
         self.max_particle_length: int = max_length
         self.step: int = step
-        self.train_dataframe: pd.DataFrame = train_dataframe
+        #self.train_dataframe: pd.DataFrame = train_dataframe
+        self.train_dataframe = train_dataframe.to_dict('records')
 
         # Init best particle
         self.best_particle: CandidateShapelet = CandidateShapelet(max_length
@@ -67,27 +69,7 @@ class ShapeletsPso:
         # Init swarm
         self._init_swarm()
 
-    def _fitness_function(self, candidate: CandidateShapelet):
 
-        """ Check the fitness of candidate shapelet"""
-
-        distances = []
-        # Calculate distances between candidate and given classes times series
-        for _, time_series in self.train_dataframe.iterrows():
-
-            distance_item = (time_series["class_index"]
-                             , utils.subsequent_distance(time_series["values"], candidate.position))
-            distances.append(distance_item)
-
-        # Find the optimal split point given by candidate
-        information_gain, split_point, optimal_entropy = \
-            utils.calculate_information_gain(sorted(distances, key=lambda t: t[1]))
-
-        # Move candidate towards best position
-        if candidate.best_information_gain < information_gain:
-            candidate.best_information_gain = information_gain
-            candidate.best_position = candidate.position
-            candidate.optimal_split_distance = split_point
 
     def _init_swarm(self):
 
@@ -105,7 +87,14 @@ class ShapeletsPso:
                 np.array([(self.max_position - self.min_position) * random.random() + self.min_position for _ in
                          candidate.position])
 
-            self._fitness_function(candidate)
+            # Assess candidate position
+            information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
+
+            # Move candidate towards best position
+            if candidate.best_information_gain < information_gain:
+                candidate.best_information_gain = information_gain
+                candidate.best_position = candidate.position
+                candidate.optimal_split_distance = split_point
 
             self.swarm.append(candidate)
 
@@ -142,7 +131,13 @@ class ShapeletsPso:
                 candidate.position += candidate.velocity
 
                 # Check the fitness of current candidate
-                self._fitness_function(candidate)
+                information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
+
+                # Move candidate towards best position
+                if candidate.best_information_gain < information_gain:
+                    candidate.best_information_gain = information_gain
+                    candidate.best_position = candidate.position
+                    candidate.optimal_split_distance = split_point
 
                 # Update best particle
                 if candidate.best_information_gain > self.best_particle.best_information_gain:

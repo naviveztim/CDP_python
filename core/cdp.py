@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from utils import utils
+from utils.utils import try_except, individual_use_only, similarity_coefficient
 from utils.logger import logger
 from core.shapelet_classifier import ShapeletClassifier
 import csv
@@ -14,6 +14,7 @@ PATTERNS_FILE_NAME = 'patterns.csv'
 class CDP:
     """ Concatenated Decision Paths (CDP) method implementation"""
 
+    @individual_use_only
     def __init__(self
                  , dataset: pd.DataFrame
                  , model_folder: str
@@ -99,7 +100,8 @@ class CDP:
         except Exception as e:
             self.classification_trees = dict()
 
-    @utils.try_except
+    @individual_use_only
+    @try_except
     def load_model(self):
 
         # Load model
@@ -112,7 +114,8 @@ class CDP:
         for pattern in self.patterns:
            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
-    @utils.try_except
+    @individual_use_only
+    @try_except
     def fit(self):
 
         """ Fills the dictionary with classification trees. If model exists, tries to reuse
@@ -153,7 +156,8 @@ class CDP:
         #for pattern in self.patterns:
         #    logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
-    @utils.try_except
+    @individual_use_only
+    @try_except
     def predict(self, dataset: pd.DataFrame) -> list:
 
         """ Predict indexes of given time series datset"""
@@ -174,7 +178,7 @@ class CDP:
                                for classification_tree in self.classification_trees.values()])
 
             # Find similarity between found pattern and saved during training
-            similarities = [(i, utils.similarity_coeff(pattern, s)) for i, s in self.patterns]
+            similarities = [(i, similarity_coefficient(pattern, s)) for i, s in self.patterns]
 
             # Sort tuples by closest distance and take 10 closest
             biggest_similarities = sorted(similarities, key=lambda x: x[1], reverse=True)[:10]

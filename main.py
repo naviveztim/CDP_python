@@ -1,7 +1,7 @@
 import argparse
 import os.path
 from core.cdp import CDP
-from utils.utils import from_ucr, to_ucr
+from utils.utils import from_ucr_format, to_ucr_format
 from utils.logger import logger
 import timeit
 
@@ -65,7 +65,7 @@ def main():
     show_arguments(args)
 
     # Obtain train dataset from csv file
-    train_dataset = from_ucr(args.train, args.delimiter) if args.train else None
+    train_dataset = from_ucr_format(args.train, args.delimiter) if args.train else None
 
     # Initialize CDP
     cdp = CDP(dataset=train_dataset
@@ -85,7 +85,7 @@ def main():
     if args.predict:
 
         # Obtain test dataset
-        dataset = from_ucr(args.predict, delimiter=',', index=False)
+        dataset = from_ucr_format(args.predict, delimiter=',', index=False)
 
         # Predict class indexes of a test dataset
         predicted_class_indexes = cdp.predict(dataset)
@@ -96,13 +96,13 @@ def main():
         output_filepath = os.path.join(directory_path, original_filename + '_predicted.csv')
 
         # Save results in UCR format
-        to_ucr(dataset, predicted_class_indexes, output_filepath)
+        to_ucr_format(dataset, predicted_class_indexes, output_filepath)
 
     # Test accuracy
     if args.test:
 
         # Obtain test dataset
-        test_dataset = from_ucr(args.test, delimiter=',')
+        test_dataset = from_ucr_format(args.test, delimiter=',')
 
         # Predict class indexes of a test dataset
         predicted_class_indexes = cdp.predict(test_dataset)
