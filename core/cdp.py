@@ -7,7 +7,10 @@ from utils.utils import try_except, individual_use_only, similarity_coefficient
 from utils.logger import logger
 from core.shapelet_classifier import ShapeletClassifier
 import csv
+
+# Filename of trained model - contains sequence of decision trees
 MODEL_FILENAME = 'cdp_model.pickle'
+# Filename of csv file that contains predicted class indexes
 PATTERNS_FILE_NAME = 'patterns.csv'
 
 
@@ -27,20 +30,22 @@ class CDP:
         self.model_folder = model_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        self.train_dataset = dataset
         self.patterns: list[tuple] = []
         self.classification_trees = dict()
         self.compression_factor = compression_factor
         self.normalize = normalize
         self.derivative = derivative
-        self._process_dataset(self.train_dataset)
+        self.train_dataset = self._process_dataset(dataset)
 
     def _process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
+        """ Process given dataframe with compression, normalization or extract derivative """
+
+        dataset = dataset.copy()
 
         if dataset is None or dataset.empty:
-            return
+            return pd.DataFrame()
 
-        # Apply compression on time series values
+        # Apply compression on time series
         if self.compression_factor > 1:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: pd.Series(x).rolling(window=self.compression_factor, center=False)
@@ -48,17 +53,21 @@ class CDP:
                                              .dropna()
                                              .tolist()[::2])
 
-        # Take original/derivative time series values
+        # Extract derivative from time series
         if self.derivative:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
 
-        # Apply normalization
+        # Apply normalization on time series
         if self.normalize:
             dataset['values'] = dataset['values'] \
                 .apply(lambda x: (x - np.mean(x)) / np.std(x))
 
-    def _load_patterns(self, csv_file_path):
+        return dataset
+
+    def _load_patterns(self, csv_file_path: str):
+        """ Load class indexes along with their representative patterns (LLR..)"""
+
         # Initialize an empty list to store the loaded data
         self.patterns = []
 
@@ -72,7 +81,9 @@ class CDP:
                 class_pattern = row['class_pattern']
                 self.patterns.append((class_index, class_pattern))
 
-    def _save_patterns(self, csv_file_path):
+    def _save_patterns(self, csv_file_path: str):
+        """ Save class indexes along with their representative patterns (LLR..) """
+
         # Load patterns from file
         headers = ['class_index', 'class_pattern']
 
@@ -88,11 +99,13 @@ class CDP:
                 writer.writerow(row)
 
     def _save_classification_trees(self, model_folder_path: str):
+        """ Save model with classification tree sequence """
 
         with open(os.path.join(model_folder_path, MODEL_FILENAME), 'wb') as file:
             pickle.dump(self.classification_trees, file)
 
     def _load_classification_trees(self, model_folder_path: str) -> dict:
+        """ Read model file with decision trees sequence """
 
         try:
             with open(os.path.join(model_folder_path, MODEL_FILENAME), 'rb') as file:
@@ -100,7 +113,6 @@ class CDP:
         except Exception as e:
             self.classification_trees = dict()
 
-    @individual_use_only
     @try_except
     def load_model(self):
 
@@ -114,7 +126,6 @@ class CDP:
         for pattern in self.patterns:
            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
-    @individual_use_only
     @try_except
     def fit(self):
 
@@ -137,9 +148,6 @@ class CDP:
         # Save all classifiers
         self._save_classification_trees(self.model_folder)
 
-        # Take equal number of samples from every class index
-        #min_samples = max(10, self.train_dataset.groupby('class_index').size().min())
-
         # Create patterns in format:
         #  [(0, 'LLRLL...LLRLLL')
         # ....
@@ -152,21 +160,15 @@ class CDP:
         # Save patterns
         self._save_patterns(os.path.join(self.model_folder, PATTERNS_FILE_NAME))
 
-        # Sanity check
-        #for pattern in self.patterns:
-        #    logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
-
-    @individual_use_only
     @try_except
     def predict(self, dataset: pd.DataFrame) -> list:
 
         """ Predict indexes of given time series datset"""
 
         logger.info(f"Predicting...")
-        processed_dataset = dataset.copy()
 
         # Apply pre-processing, already applied to train dataset
-        self._process_dataset(processed_dataset)
+        processed_dataset = self._process_dataset(dataset)
 
         predicted_class_indexes = []
 

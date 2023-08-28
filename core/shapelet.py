@@ -4,7 +4,9 @@ from utils.logger import logger
 
 
 class Shapelet:
-    def __init__(self, values, optimal_split_distance, best_information_gain):
+    def __init__(self, values: np.array
+                     , optimal_split_distance: float
+                     , best_information_gain: float):
         self.values = values
         self.optimal_split_distance = optimal_split_distance
         self.best_information_gain = best_information_gain

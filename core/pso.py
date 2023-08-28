@@ -1,8 +1,7 @@
 import sys
 import numpy as np
 import random
-from utils.utils import subsequent_distance\
-                        , calculate_information_gain, assess_candidate_position
+from utils.utils import assess_candidate_position
 from utils.logger import logger
 import pandas as pd
 
@@ -21,6 +20,8 @@ class CandidateShapelet:
         self.best_position: np.array = self.position
 
     def copy(self, candidate):
+        """ Copy so found the best parameters to given candidate"""
+
         if isinstance(candidate, CandidateShapelet):
             self.optimal_split_distance = candidate.optimal_split_distance
             self.best_information_gain = candidate.best_information_gain
@@ -35,10 +36,10 @@ class ShapeletsPso:
         compares several candidate shapelets in a swarm. As result select the one which
         maximally separate two classes."""
 
-    # PSO constants, according to: http://msdn.microsoft.com/en-us/magazine/hh335067.aspx
-    W = 0.729  # inertia weight
-    C1 = 1.49445  # cognitive / local weight
-    C2 = 1.49445  # social / global weight
+    # Constants of the process (empirically found)
+    W = 0.6923  # inertia weight
+    C1 = 1.387962  # cognitive / local weight
+    C2 = 1.387962  # social / global weight
 
     # Stop optimization condition
     MAX_ITERATIONS = 20
@@ -59,7 +60,6 @@ class ShapeletsPso:
         self.min_particle_length: int = min_length
         self.max_particle_length: int = max_length
         self.step: int = step
-        #self.train_dataframe: pd.DataFrame = train_dataframe
         self.train_dataframe = train_dataframe.to_dict('records')
 
         # Init best particle
@@ -69,20 +69,21 @@ class ShapeletsPso:
         # Init swarm
         self._init_swarm()
 
-
-
     def _init_swarm(self):
 
         for length in range(self.min_particle_length, self.max_particle_length+1, self.step):
 
+            # Create candidate shapelet
             candidate = CandidateShapelet(length
                                           , self.min_velocity, self.max_velocity
                                           , self.min_position, self.max_position)
 
+            # Adjust candidate velocity
             candidate.velocity = \
                 np.array([(self.max_velocity - self.min_velocity)*random.random() + self.min_velocity for _ in
                          candidate.velocity])
 
+            # Adjust candidate position
             candidate.position = \
                 np.array([(self.max_position - self.min_position) * random.random() + self.min_position for _ in
                          candidate.position])
@@ -96,25 +97,24 @@ class ShapeletsPso:
                 candidate.best_position = candidate.position
                 candidate.optimal_split_distance = split_point
 
+            # Create swarm of candidates
             self.swarm.append(candidate)
 
+            # Initialize best candidate
             if candidate.best_information_gain > self.best_particle.best_information_gain:
                 self.best_particle.copy(candidate)
 
     def start_pso(self):
         """ Find the best shapelet that distinguishes time series from two classes"""
 
-        old_best_gain = 0.0
         new_best_gain = 0.0
         iteration = 0
 
-        # TODO: Switch to ITERATION_EPSILON
+        # TODO: Could be replaced iterations loop
         while True:
-        #while iteration < ShapeletsPso.MAX_ITERATIONS:
 
             iteration += 1
 
-            # Run competition between candidates
             for candidate in self.swarm:
 
                 # Update candidate velocity
@@ -141,14 +141,12 @@ class ShapeletsPso:
 
                 # Update best particle
                 if candidate.best_information_gain > self.best_particle.best_information_gain:
-                    #self.best_particle = deepcopy(candidate)
                     self.best_particle.copy(candidate)
 
             old_best_gain = new_best_gain
             new_best_gain = self.best_particle.best_information_gain
+
             logger.debug(f'Iteration: {iteration}')
-            logger.debug(f'Old best gain: {old_best_gain}')
-            logger.debug(f'New best gain {new_best_gain}')
 
             if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
                 break

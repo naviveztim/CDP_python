@@ -22,14 +22,20 @@ class ShapeletClassifier:
         self.classifiers_folder = classifiers_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        self.balanced_dataset = pd.DataFrame()
+        self.balanced_dataset = self._get_balanced_dataset(dataset)
+
+    @staticmethod
+    def _get_balanced_dataset(dataset: pd.DataFrame):
+        """ Create dataset which contains 10 samples from each class with replacement
+        """
+        balanced_dataset = pd.DataFrame()
         if dataset is not None and not dataset.empty:
             for i in dataset['class_index'].unique():
-                self.balanced_dataset = \
-                    pd.concat([self.balanced_dataset,
+                balanced_dataset = \
+                    pd.concat([balanced_dataset,
                                dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
                                ])
-        self.balanced_dataset = self.balanced_dataset.reset_index().drop(columns=['index'])
+        return balanced_dataset.reset_index().drop(columns=['index'])
 
     @staticmethod
     def _build_tree(permutation: tuple):
