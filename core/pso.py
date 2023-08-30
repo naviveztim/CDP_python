@@ -37,9 +37,9 @@ class ShapeletsPso:
         maximally separate two classes."""
 
     # Constants of the process (empirically found)
-    W = 0.6923  # inertia weight
-    C1 = 1.387962  # cognitive / local weight
-    C2 = 1.387962  # social / global weight
+    W = 0.9923  # inertia weight
+    C1 = 1.897962  # cognitive / local weight
+    C2 = 1.897962  # social / global weight
 
     # Stop optimization condition
     MAX_ITERATIONS = 20

@@ -13,6 +13,7 @@ Python implementation of the CDP algorithm posses following advantages:
 Fig. 1 Comparison of classifiers' accuracy  
 
 ### Installation 
+TODO: 
 
 ### Training 
 
@@ -62,6 +63,39 @@ for i, row in test_dataset.iterrows():
 print(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_indexes), 2)}%")
 
 </pre>
+
+### Model
+Two files are produced during training process. First one contains representation in .pickle format
+of decision tree sequence, and the second one (in csv format), contains concatenated decision patterns produced from decision
+trees, for each time series from train dataset, as shown in the example below. 
+
+<pre>
+class_index,class_pattern
+1,LLRLRLLRRLLLRLLLLRL...
+1,LLLLRRRRLLLLLLRRRRR...
+2,LLLLRRRRLLLLLLLLLLL...
+</pre>
+
+These files are stored in model folder given as an input parameter to the process. They have hardcoded names
+(defined in cdp.py) as follows: 
+<pre>
+# Filename of trained model - contains sequence of decision trees
+MODEL_FILENAME = 'cdp_model.pickle'
+# Filename of csv file that contains predicted class indexes
+PATTERNS_FILE_NAME = 'patterns.csv'
+</pre>
+
+### Classification
+Currently, classification is done by producing decision pattern of an incoming time series, and comparing 
+that pattern to such patterns from train dataset. The pattern from train dataset, which mostly resemble the 
+incoming time series pattern will define its index. 
+
+Default process of classification is a bit slow as the incoming time series pattern has to be compared 
+with many patterns, which is a bit slow process. 
+
+More advanced classification methods such as Neural Networks, Random Forests or other could be applied
+for even more precise and fast classification, by taking produced decision patterns as input features
+to these methods. 
 
 ### References: 
 
