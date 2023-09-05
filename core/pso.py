@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-import random
 from utils.utils import assess_candidate_position
 from utils.logger import logger
 import pandas as pd
@@ -15,8 +14,8 @@ class CandidateShapelet:
         self.optimal_split_distance: float = 0.0
         self.best_information_gain: float = sys.float_info.min
         self.length: int = length
-        self.position: np.array = np.array([random.uniform(min_position, max_position) for _ in range(length)])
-        self.velocity: np.array = np.array([random.uniform(min_velocity, max_velocity) for _ in range(length)])
+        self.position: np.array = np.random.uniform(min_position, max_position, length)
+        self.velocity: np.array = np.random.uniform(min_velocity, max_velocity, length)
         self.best_position: np.array = self.position
 
     def copy(self, candidate):
@@ -37,9 +36,9 @@ class ShapeletsPso:
         maximally separate two classes."""
 
     # Constants of the process (empirically found)
-    W = 0.9923  # inertia weight
-    C1 = 1.897962  # cognitive / local weight
-    C2 = 1.897962  # social / global weight
+    W = 0.729  # inertia weight
+    C1 = 1.49445  # cognitive / local weight
+    C2 = 1.49445  # social / global weight
 
     # Stop optimization condition
     MAX_ITERATIONS = 20
@@ -78,15 +77,17 @@ class ShapeletsPso:
                                           , self.min_velocity, self.max_velocity
                                           , self.min_position, self.max_position)
 
+            '''
             # Adjust candidate velocity
             candidate.velocity = \
-                np.array([(self.max_velocity - self.min_velocity)*random.random() + self.min_velocity for _ in
+                np.array([(self.max_velocity - self.min_velocity)*np.random.rand() + self.min_velocity for _ in
                          candidate.velocity])
 
             # Adjust candidate position
             candidate.position = \
-                np.array([(self.max_position - self.min_position) * random.random() + self.min_position for _ in
+                np.array([(self.max_position - self.min_position) * np.random.rand() + self.min_position for _ in
                          candidate.position])
+            '''
 
             # Assess candidate position
             information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
@@ -96,6 +97,7 @@ class ShapeletsPso:
                 candidate.best_information_gain = information_gain
                 candidate.best_position = candidate.position
                 candidate.optimal_split_distance = split_point
+                candidate.length = length
 
             # Create swarm of candidates
             self.swarm.append(candidate)
@@ -118,10 +120,10 @@ class ShapeletsPso:
             for candidate in self.swarm:
 
                 # Update candidate velocity
-                for i in range(len(candidate.velocity)):
+                for i in range(candidate.length):
 
-                    r1 = random.random()
-                    r2 = random.random()
+                    r1 = np.random.rand()
+                    r2 = np.random.rand()
 
                     candidate.velocity[i] = self.W * candidate.velocity[i] + \
                         self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
@@ -152,5 +154,5 @@ class ShapeletsPso:
                 break
 
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
-        self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length]
+        #self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length]
 

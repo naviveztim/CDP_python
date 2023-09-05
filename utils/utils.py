@@ -22,8 +22,9 @@ def try_except(func):
         try:
             result = func(*args, **kwargs)
         except Exception as e:
-            print(f"An exception occurred: {e}")
+            print(f"ERROR: {e}")
             result = None
+            raise e
         return result
     return wrapper
 

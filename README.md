@@ -8,10 +8,6 @@ Python implementation of the CDP algorithm posses following advantages:
 - python implementation does not depend on other machine learning package. It has only dependencies on standard python packages
 - **very simple** to maintain (consists of 8 python files, spread in two folders)
 
-![Accuracy comparison](Accuracy_comparison.png)
-
-Fig. 1 Comparison of state-of-the-art classifiers and CDP method.   
-
 ### Installation 
 TODO: 
 
@@ -66,6 +62,28 @@ for i, row in test_dataset.iterrows():
 print(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_indexes), 2)}%")
 
 </pre>
+
+### Performance - accuracy and training time 
+ 
+CDP model has very smalltraining time - it vary from seconds to minutes for dataset from USR database. 
+Table below shows some elapsed training time and corresponding accuracy along with used hyper-parameters. 
+Also. Fig. 1 shows comparison of the CDP method in terms of accuracy with some state-of-the-art time series 
+classification method. Note: Accuracies reported for Fig.1 were obtained by C# implementation of CDP method. 
+Table 1 contain training time and accuracies obtained by python implementation of the CDP method. Python implementation
+does not uses any acceleration techniques as numba, or multiprocessing, although the code is easy to change and
+accommodate these techniques. 
+
+Table 1. Training time and accuracy of **python implementation** of CDP method
+
+| UCR Dataset  | Num. classes | Num. train samples | Num. test samples | Training time, [min] | Accuracy, [%] | Compression rate | Num. decision trees | Normalize | Derivative |
+|--------------|--------------|--------------------|-------------------|----------------------|---------------|------------------|---------------------|-----------|------------|
+| Swedish Leaf | 15           |       500          | 625               |       5', 54''       |     88%       | 2                | 500                 | No        | No         |
+| Beef         | 5            |        30          | 30                |                      |               | 1                | 200                 | Yes       | Yes        |
+
+![Accuracy comparison](Accuracy_comparison.png)
+
+Fig. 1 Comparison of state-of-the-art classifiers and CDP method. Used **C# implementation** of 
+CDP method.    
 
 ### Model
 Two files are produced during training process. First one contains representation in .pickle format

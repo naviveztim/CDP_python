@@ -4,6 +4,7 @@ from core.cdp import CDP
 from utils.utils import from_ucr_format, to_ucr_format
 from utils.logger import logger
 import timeit
+import numpy as np
 
 
 def get_arguments() -> argparse.Namespace:
@@ -49,15 +50,18 @@ def show_arguments(args: argparse.Namespace):
     logger.info(f'Model folder: {args.model_folder}')
     logger.info(f'Test csv: {args.test}')
     logger.info(f'Predict csv: {args.predict}')
-    logger.info(f'Delimiter: {args.delimiter}')
+    logger.info(f'Delimiter: "{args.delimiter}"')
     logger.info(f'Compress factor: {args.compress}')
-    logger.info(f'Derivative?: {args.derivative}')
-    logger.info(f'Normalize?: {args.normalize}')
+    logger.info(f'Derivative: {args.derivative}')
+    logger.info(f'Normalize: {args.normalize}')
     logger.info(f'Number of nodes in tree: {args.nodes}')
     logger.info(f'Number of trees in decision pattern: {args.trees}')
 
 
 def main():
+
+    np.random.seed(42)
+
     # Get command line arguments
     args = get_arguments()
 
