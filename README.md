@@ -135,6 +135,9 @@ More advanced classification methods such as Neural Networks, Random Forests or 
 for even more precise and fast classification, by taking produced decision patterns as input features
 to these methods. 
 
+### Contacts: 
+cdp_project@outlook.com
+
 ### References: 
 
 _“Concatenated Decision Paths Classification for Datasets with Small Number of Class Labels”, Ivan Mitzev and N.H. Younan, ICPRAM, Porto, Portugal, 24-26 February 2017_
