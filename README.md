@@ -66,9 +66,8 @@ print(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_ind
 
 </pre>
 
-### Performance - accuracy and training time 
- 
-CDP model has very smalltraining time - it vary from seconds to minutes for dataset from USR database. 
+### Performance - accuracy and training time  
+CDP model has very small training time- it vary from seconds to minutes for dataset from USR database. 
 Table below shows some elapsed training time and corresponding accuracy along with used hyper-parameters. 
 Also. Fig. 1 shows comparison of the CDP method in terms of accuracy with some state-of-the-art time series 
 classification method. Note: Accuracies reported for Fig.1 were obtained by C# implementation of CDP method. 

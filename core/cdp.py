@@ -1,12 +1,14 @@
 import os.path
 import pickle
+import csv
+from collections import defaultdict
 import pandas as pd
 import numpy as np
-from collections import defaultdict
+
 from utils.utils import try_except, similarity_coefficient
 from utils.logger import logger
 from core.shapelet_classifier import ShapeletClassifier
-import csv
+
 
 # Filename of trained model - contains sequence of decision trees
 MODEL_FILENAME = 'cdp_model.pickle'

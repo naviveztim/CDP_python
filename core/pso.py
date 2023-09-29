@@ -1,8 +1,9 @@
 import sys
 import numpy as np
+import pandas as pd
+
 from utils.utils import assess_candidate_position
 from utils.logger import logger
-import pandas as pd
 
 
 class CandidateShapelet:

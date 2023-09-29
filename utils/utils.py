@@ -1,10 +1,11 @@
-import numpy as np
 import sys
-from collections import Counter
-import pandas as pd
-from utils.logger import logger
 import csv
 import fileinput
+from collections import Counter
+import pandas as pd
+import numpy as np
+
+from utils.logger import logger
 
 
 def try_except(func):

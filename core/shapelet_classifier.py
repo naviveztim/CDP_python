@@ -1,13 +1,13 @@
-import pandas as pd
 import os
 from collections import Counter
-from itertools import chain
+from itertools import chain, combinations, permutations
 import numpy as np
+import pandas as pd
+
 from core.shapelet import Shapelet
 from core.pso import ShapeletsPso
 from utils.utils import subsequent_distance
 from utils.btree import BTree
-from itertools import combinations, permutations
 from utils.logger import logger
 
 
