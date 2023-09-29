@@ -69,11 +69,12 @@ print(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_ind
 ### Performance - accuracy and training time  
 CDP model has very small training time- it vary from seconds to minutes for dataset from USR database. 
 Table below shows some elapsed training time and corresponding accuracy along with used hyper-parameters. 
-Also. Fig. 1 shows comparison of the CDP method in terms of accuracy with some state-of-the-art time series 
-classification method. Note: Accuracies reported for Fig.1 were obtained by C# implementation of CDP method. 
-Table 1 contain training time and accuracies obtained by python implementation of the CDP method. Python implementation
-does not uses any acceleration techniques as numba, or multiprocessing, although the code is easy to change and
-accommodate these techniques. 
+Also, Fig. 1 shows comparison of the CDP method in terms of accuracy with some state-of-the-art time series 
+classification method. 
+Note: Accuracies reported for Fig.1 were obtained by **C# implementation** of CDP method (for questions and inquiries: cdp_project@outlook.com). 
+Table 1 contain training time and accuracies obtained by python implementation of the CDP method and Table 2 corresponding performance parameters
+from C# implementation. 
+Present Python implementation does not use any acceleration techniques such as numba, or multiprocessing. 
 
 Table 1. Training time and accuracy of **python implementation** of CDP method
 
