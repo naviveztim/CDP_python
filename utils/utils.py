@@ -7,15 +7,6 @@ import csv
 import fileinput
 
 
-def individual_use_only(func):
-    """ Individual usage only - message generator """
-    def wrapper(*args, **kwargs):
-        logger.info("Warning: This software is free for individual use only.")
-        logger.info("For more information please contact: cdp_project@outlook.com")
-        return func(*args, **kwargs)
-    return wrapper
-
-
 def try_except(func):
     """ Used to decorate functions with try/except clause """
     def wrapper(*args, **kwargs):

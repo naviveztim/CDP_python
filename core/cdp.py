@@ -3,7 +3,7 @@ import pickle
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from utils.utils import try_except, individual_use_only, similarity_coefficient
+from utils.utils import try_except, similarity_coefficient
 from utils.logger import logger
 from core.shapelet_classifier import ShapeletClassifier
 import csv
@@ -17,7 +17,6 @@ PATTERNS_FILE_NAME = 'patterns.csv'
 class CDP:
     """ Concatenated Decision Paths (CDP) method implementation"""
 
-    @individual_use_only
     def __init__(self
                  , dataset: pd.DataFrame
                  , model_folder: str
