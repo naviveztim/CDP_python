@@ -3,7 +3,7 @@
 ### Overview 
 Python implementation of the CDP algorithm posses following advantages: 
 - **very fast** to (re)train (training time vary from seconds to minutes for datasets from [UCR](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/))
-- produces **compact (~KB) models**, in comparison with large standard models (~MB)  
+- produces **compact (~KB) models**, in comparison with large standard models (~100MB)  
 - maintains **high accuracy** and is comparable or in some cases even more accurate than state of the arts algorithms (Fig.1) 
 - python implementation does not depend on other machine learning package. It has only dependencies on standard python packages
 - **very simple** to maintain (consists of 8 python files, spread in two folders)
@@ -14,6 +14,9 @@ TODO:
 ### Training 
 
 <pre>
+from core.cdp import CDP
+from utils.utils import from_ucr_format, to_ucr_format
+
 # Obtain train dataset from UCR format file
 train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<'delimiter'>)
 
