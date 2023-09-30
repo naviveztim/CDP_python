@@ -1,0 +1,4 @@
+name: cdp-ts
+dependencies:
+  - numpy
+  - pandas

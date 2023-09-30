@@ -70,6 +70,7 @@ class ShapeletsPso:
         self._init_swarm()
 
     def _init_swarm(self):
+        """ Initialize candidate shapelets' parameters """
 
         for length in range(self.min_particle_length, self.max_particle_length+1, self.step):
 
@@ -77,18 +78,6 @@ class ShapeletsPso:
             candidate = CandidateShapelet(length
                                           , self.min_velocity, self.max_velocity
                                           , self.min_position, self.max_position)
-
-            '''
-            # Adjust candidate velocity
-            candidate.velocity = \
-                np.array([(self.max_velocity - self.min_velocity)*np.random.rand() + self.min_velocity for _ in
-                         candidate.velocity])
-
-            # Adjust candidate position
-            candidate.position = \
-                np.array([(self.max_position - self.min_position) * np.random.rand() + self.min_position for _ in
-                         candidate.position])
-            '''
 
             # Assess candidate position
             information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
@@ -113,11 +102,9 @@ class ShapeletsPso:
         new_best_gain = 0.0
         iteration = 0
 
-        # TODO: Could be replaced iterations loop
         while True:
 
             iteration += 1
-
             for candidate in self.swarm:
 
                 # Update candidate velocity
@@ -155,5 +142,4 @@ class ShapeletsPso:
                 break
 
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
-        #self.best_particle.velocity = self.best_particle.velocity[:self.best_particle.length]
 

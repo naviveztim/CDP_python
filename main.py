@@ -1,10 +1,11 @@
 import argparse
 import os.path
+import timeit
+import numpy as np
+
 from core.cdp import CDP
 from utils.utils import from_ucr_format, to_ucr_format
 from utils.logger import logger
-import timeit
-import numpy as np
 
 
 def get_arguments() -> argparse.Namespace:
@@ -44,8 +45,8 @@ def get_arguments() -> argparse.Namespace:
 
 
 def show_arguments(args: argparse.Namespace):
-
     """ Displays picked arguments """
+
     logger.info(f'Train csv: {args.train}')
     logger.info(f'Model folder: {args.model_folder}')
     logger.info(f'Test csv: {args.test}')
