@@ -1,5 +1,6 @@
 import numpy as np
 import csv
+from utils.logger import logger
 
 
 class Dataset:
@@ -28,8 +29,8 @@ class Dataset:
 
     @staticmethod
     def _load_dataset(filepath: str, delimiter: str, no_indexes: bool) -> tuple:
-
         """Load a UCR type data set from a local folder. """
+
         try:
             # Parse data file
             data = np.genfromtxt(filepath, delimiter=delimiter)
@@ -46,20 +47,20 @@ class Dataset:
                 class_indexes = class_indexes.astype('float64').astype('int64')
 
         except FileNotFoundError:
-            # TODO: logger.info("ERROR: ")
+            logger.info("ERROR: File not found!")
             raise
         except OSError:
-            # TODO: logger.info("ERROR: ")
+            logger.info("ERROR: OS error appeared!")
             raise
         except Exception as e:
-            # TODO: logger.info("ERROR: ")
+            logger.info(f"ERROR: {str(e)}")
             raise
 
         return class_indexes, values
 
     def copy(self):
-
         """ Makes shallow copy of Dataset object """
+
         new_copy = Dataset(None
                            , None
                            , np.copy(self.class_indexes)
@@ -69,6 +70,9 @@ class Dataset:
         return new_copy
 
     def apply_normalization(self):
+
+        """Apply normalization: (x - m)/sigma on given time series """
+
         # Calculate the mean and standard deviation for each row
         mean_values = np.mean(self.values, axis=1, keepdims=True)
         std_values = np.std(self.values, axis=1, keepdims=True)
@@ -77,6 +81,8 @@ class Dataset:
         self.values = (self.values - mean_values) / std_values
 
     def apply_compression(self, compression_factor: int):
+        """ Takes averaged sample of every 'compression_factor' samples """
+
         new_values = []
         for x in self.values:
             rolling_mean = np.convolve(x, np.ones(compression_factor) / compression_factor, 'valid')
@@ -84,13 +90,18 @@ class Dataset:
         self.values = np.array(new_values)
 
     def apply_derivative(self):
+        """ Takes derivatives of time series in given time series"""
         self.values = np.diff(self.values, axis=1)
 
     def filter_by_class(self, class_index):
+        """ """
+
         filtered_indices = np.where(self.class_indexes == class_index)[0]
         return Dataset(None, None, self.class_indexes[filtered_indices], self.values[filtered_indices])
 
     def to_ucr_format(self, filename: str, delimiter: str = ','):
+        """ Save predicted class indexes along with given time series"""
+
         with open(filename, mode='w', newline='') as file:
             writer = csv.writer(file
                                 , delimiter=delimiter

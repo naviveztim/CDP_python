@@ -3,7 +3,6 @@
 import sys
 import numpy as np
 from utils.utils import assess_candidate_position
-from utils.logger import logger
 from utils.dataset import Dataset
 import numba
 from numba import NumbaWarning

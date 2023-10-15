@@ -1,11 +1,9 @@
 """ Parse input arguments and apply train/predict/evaluate procedure on given dataset. """
-
 import argparse
 import os.path
 import timeit
 import sys
 import numpy as np
-
 from core.cdp import CDP
 from utils.logger import logger
 from utils.dataset import Dataset
@@ -128,7 +126,7 @@ def main():
         directory_path = os.path.dirname(args.predict)
         output_filepath = os.path.join(directory_path, original_filename + '_predicted.csv')
 
-        # Save results in UCR format
+        # Save predictions along with time series, in UCR format
         dataset.to_ucr_format(output_filepath)
 
     # Test accuracy

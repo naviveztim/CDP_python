@@ -1,4 +1,3 @@
-# import pandas as pd
 from utils.utils import subsequent_distance
 from core.shapelet import Shapelet
 import numpy as np
@@ -18,8 +17,9 @@ class BTree:
         self.accuracy: float = 0.0
         self.num_nodes = 1
 
-    def build_classification_path(self, time_series: np.array) -> str:
+    def build_classification_pattern(self, time_series: np.array) -> str:
 
+        """ Build classification pattern that represent given time series"""
         current_node: BTree.Node = self.root
         path_string: str = ''
 

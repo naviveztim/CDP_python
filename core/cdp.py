@@ -4,12 +4,10 @@ import os.path
 import pickle
 import csv
 from collections import defaultdict
-import numpy as np
 from utils.utils import try_except, similarity_coefficient
 from utils.logger import logger
 from utils.dataset import Dataset
 from core.shapelet_classifier import ShapeletClassifier
-
 
 # Filename of trained model - contains sequence of decision trees
 MODEL_FILENAME = 'cdp_model.pickle'
@@ -122,7 +120,7 @@ class CDP:
         # ....
         # , (1, 'RRRRL...RRRRLL')]
         for class_index, time_series in self.train_dataset.iterrows():
-            decision_pattern = ''.join([classification_tree.build_classification_path(time_series)
+            decision_pattern = ''.join([classification_tree.build_classification_pattern(time_series)
                                        for classification_tree in self.classification_trees.values()]
                                        )
             self.patterns.append((class_index, decision_pattern))
@@ -145,7 +143,7 @@ class CDP:
         for _, time_series in dataset.iterrows():
 
             # Find the pattern for given time series
-            pattern = ''.join([classification_tree.build_classification_path(time_series)
+            pattern = ''.join([classification_tree.build_classification_pattern(time_series)
                                for classification_tree in self.classification_trees.values()])
 
             # Find similarity between found pattern and saved during training

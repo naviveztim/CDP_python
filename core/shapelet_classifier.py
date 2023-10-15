@@ -229,6 +229,8 @@ class ShapeletClassifier:
 
     def _create_group(self) -> list:
 
+        """ Create combination of all class indexes such that all class indexes are uniformly represented """
+
         class_indexes = np.unique(self.balanced_dataset.class_indexes)
         num_class_indexes = len(class_indexes)
         num_allowed_indexes = self.pattern_length * self.num_classes_per_tree // num_class_indexes

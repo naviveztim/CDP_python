@@ -154,27 +154,6 @@ def process_dataset(dataset: Dataset
 
     return dataset
 
-def to_ucr_format(dataframe: Dataset
-                  , predicted_indexes: list
-                  , filepath: str
-                  , delimiter: str = ', '):
-    """ Save pandas dataframe to csv file in UCR format"""
-
-    raise NotImplemented
-    '''
-    dataframe.class_index = predicted_indexes
-
-    # Convert list values to comma-separated strings
-    dataframe.values = dataframe.values.apply(lambda x: delimiter.join(map(str, x)))
-    comma_separated_string = ', '.join(str(x) for x in dataframe.values)
-
-    # Save the DataFrame as a CSV file without column names
-    pdf.to_csv(filepath, index=False, header=False, quoting=csv.QUOTE_NONE,  escapechar=' ')
-
-    # Remove spaces in csv file
-    for line in fileinput.input(filepath, inplace=True):
-        sys.stdout.write(line.replace(' ', ''))
-    '''
 
 
 
