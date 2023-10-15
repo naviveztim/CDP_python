@@ -1,11 +1,15 @@
+""" Parse input arguments and apply train/predict/evaluate procedure on given dataset. """
+
 import argparse
 import os.path
 import timeit
+import sys
 import numpy as np
 
 from core.cdp import CDP
-from utils.utils import from_ucr_format, to_ucr_format
 from utils.logger import logger
+from utils.dataset import Dataset
+from utils.utils import process_dataset
 
 
 def get_arguments() -> argparse.Namespace:
@@ -15,31 +19,40 @@ def get_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Time series classification, based on CDP method')
     parser.add_argument('-train', '--train', help='Specify csv file with train samples'
                         , required=False)
-    parser.add_argument('-predict', '--predict', help='Specify csv file with samples to predict'
+    parser.add_argument('-predict', '--predict'
+                        , help='Specify csv file with samples to predict'
                         , required=False)
-    parser.add_argument('-test', '--test', help='Specify csv file with test samples'
+    parser.add_argument('-test', '--test'
+                        , help='Specify csv file with test samples'
                         , required=False)
-    parser.add_argument('-model_folder', '--model_folder', help='Specify folder where classifiers will be stored'
+    parser.add_argument('-model_folder', '--model_folder'
+                        , help='Specify folder where classifiers will be stored'
                         , required=False)
-    parser.add_argument('-delimiter', '--delimiter', help='Delimiter used in dataset. Default: comma.'
+    parser.add_argument('-delimiter', '--delimiter'
+                        , help='Delimiter used in dataset. Default: comma.'
                         , required=False, default=',')
-    parser.add_argument('-compress', '--compress', help='Compression factor. Default: 1 (No compression)'
+    parser.add_argument('-compress', '--compress'
+                        , help='Compression factor. Default: 1 (No compression)'
                         , required=False, default=1)
-    parser.add_argument('-derivative', '--derivative', help='Use original signal or its derivative. Default: Original signal'
+    parser.add_argument('-derivative', '--derivative'
+                        , help='Use original signal or its derivative. Default: Original signal'
                         , required=False, action='store_true')
-    parser.add_argument('-normalize', '--normalize', help='Normalize the original signal? Default: Do not normalize'
+    parser.add_argument('-normalize', '--normalize'
+                        , help='Normalize the original signal? Default: Do not normalize'
                         , required=False, action='store_true')
-    parser.add_argument('-nodes', '--nodes', help='Specify number of nodes in decision tree. Default: 2'
+    parser.add_argument('-nodes', '--nodes'
+                        , help='Specify number of nodes in decision tree. Default: 2'
                         , required=False, default=2)
-    parser.add_argument('-trees', '--trees', help='Specify number decision trees.'
+    parser.add_argument('-trees', '--trees'
+                        , help='Specify number decision trees.'
                         , required=False, default=100)
 
     try:
         args = parser.parse_args()
-    except argparse.ArgumentError as e:
-        logger.info(str(e))
+    except argparse.ArgumentError as arg_error:
+        logger.info(str(arg_error))
         parser.print_help()
-        exit(1)
+        sys.exit(1)
 
     return args
 
@@ -61,6 +74,7 @@ def show_arguments(args: argparse.Namespace):
 
 def main():
 
+    """ Main process function- train and evaluate prediction on given dataset"""
     np.random.seed(42)
 
     # Get command line arguments
@@ -70,16 +84,21 @@ def main():
     show_arguments(args)
 
     # Obtain train dataset from csv file
-    train_dataset = from_ucr_format(args.train, args.delimiter) if args.train else None
+    train_dataset = Dataset(filepath=args.train
+                            , delimiter=args.delimiter)
+
+    # Apply pre-processing, defined by input parameters
+    train_dataset = process_dataset(train_dataset
+                                    , compression_factor=int(args.compress)
+                                    , normalize=args.normalize
+                                    , derivative=args.derivative)
 
     # Initialize CDP
     cdp = CDP(dataset=train_dataset
               , model_folder=args.model_folder
               , num_classes_per_tree=int(args.nodes)
               , pattern_length=int(args.trees)
-              , compression_factor=int(args.compress)
-              , derivative=args.derivative
-              , normalize=args.normalize)
+              )
 
     # Train/Load the model
     if args.train:
@@ -90,10 +109,19 @@ def main():
     if args.predict:
 
         # Obtain test dataset
-        dataset = from_ucr_format(args.predict, delimiter=',', index=False)
+        dataset = Dataset(filepath=args.predict
+                          , delimiter=','
+                          , no_indexes=True)
+
+        # Apply pre-processing, already applied to train dataset
+        dataset = process_dataset(dataset
+                                  , compression_factor=int(args.compress)
+                                  , normalize=args.normalize
+                                  , derivative=args.derivative
+                                  )
 
         # Predict class indexes of a test dataset
-        predicted_class_indexes = cdp.predict(dataset)
+        dataset.class_indexes = cdp.predict(dataset)
 
         # Format result filename
         original_filename = os.path.splitext(os.path.basename(args.predict))[0]
@@ -101,36 +129,36 @@ def main():
         output_filepath = os.path.join(directory_path, original_filename + '_predicted.csv')
 
         # Save results in UCR format
-        to_ucr_format(dataset, predicted_class_indexes, output_filepath)
+        dataset.to_ucr_format(output_filepath)
 
     # Test accuracy
     if args.test:
 
         # Obtain test dataset
-        test_dataset = from_ucr_format(args.test, delimiter=',')
+        test_dataset = Dataset(args.test, delimiter=',')
+
+        # Apply pre-processing, already applied to train dataset
+        test_dataset = process_dataset(test_dataset
+                                       , compression_factor=int(args.compress)
+                                       , normalize=args.normalize
+                                       , derivative=args.derivative
+                                       )
 
         # Predict class indexes of a test dataset
         predicted_class_indexes = cdp.predict(test_dataset)
 
         # Iterate through predicted indexes and check correspondence with the original
         num_correct_predictions = 0
-        for i, row in test_dataset.iterrows():
-
-            if row['class_index'] == predicted_class_indexes[i]:
+        i = 0
+        for index, row in test_dataset.iterrows():
+            if index == predicted_class_indexes[i]:
                 num_correct_predictions += 1
+            i += 1
 
-        logger.info(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_indexes), 2)}%")
+        average_accuracy = 100 * round(num_correct_predictions / len(predicted_class_indexes), 4)
+        logger.info(f"Accuracy: {average_accuracy}%")
 
 
 if __name__ == '__main__':
     execution_time = timeit.timeit(main, number=1)
     logger.info(f"Execution time: {execution_time:.2f} seconds")
-
-
-
-
-
-
-
-
-

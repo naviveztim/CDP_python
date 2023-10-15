@@ -1,6 +1,7 @@
-import pandas as pd
+# import pandas as pd
 from utils.utils import subsequent_distance
 from core.shapelet import Shapelet
+import numpy as np
 
 
 class BTree:
@@ -8,8 +9,8 @@ class BTree:
     class Node:
         def __init__(self, shapelet: Shapelet):
             self.shapelet: Shapelet = shapelet
-            self.left: 'Node' = None
-            self.right: 'Node' = None
+            self.left = None
+            self.right = None
             self.depth = 0
 
     def __init__(self, shapelet: Shapelet):
@@ -17,7 +18,7 @@ class BTree:
         self.accuracy: float = 0.0
         self.num_nodes = 1
 
-    def build_classification_path(self, time_series: pd.Series) -> str:
+    def build_classification_path(self, time_series: np.array) -> str:
 
         current_node: BTree.Node = self.root
         path_string: str = ''
@@ -27,7 +28,8 @@ class BTree:
             if current_node is None:
                 break
 
-            distance = subsequent_distance(time_series["values"], current_node.shapelet.values)
+            distance = subsequent_distance(time_series
+                                           , current_node.shapelet.values)
 
             # Left wing
             if distance <= current_node.shapelet.optimal_split_distance:

@@ -1,12 +1,13 @@
+""" Concatenated Decision Paths (CDP) main class"""
+
 import os.path
 import pickle
 import csv
 from collections import defaultdict
-import pandas as pd
 import numpy as np
-
 from utils.utils import try_except, similarity_coefficient
 from utils.logger import logger
+from utils.dataset import Dataset
 from core.shapelet_classifier import ShapeletClassifier
 
 
@@ -20,51 +21,18 @@ class CDP:
     """ Concatenated Decision Paths (CDP) method implementation"""
 
     def __init__(self
-                 , dataset: pd.DataFrame
+                 , dataset: Dataset
                  , model_folder: str
                  , num_classes_per_tree: int
                  , pattern_length: int
-                 , compression_factor: int = None
-                 , derivative: bool = False
-                 , normalize: bool = False):
+                 ):
 
         self.model_folder = model_folder
         self.num_classes_per_tree = num_classes_per_tree
         self.pattern_length = pattern_length
-        self.patterns: list[tuple] = []
-        self.classification_trees = dict()
-        self.compression_factor = compression_factor
-        self.normalize = normalize
-        self.derivative = derivative
-        self.train_dataset = self._process_dataset(dataset)
-
-    def _process_dataset(self, dataset: pd.DataFrame) -> pd.DataFrame:
-        """ Process given dataframe with compression, normalization or extract derivative """
-
-        dataset = dataset.copy()
-
-        if dataset is None or dataset.empty:
-            return pd.DataFrame()
-
-        # Apply compression on time series
-        if self.compression_factor > 1:
-            dataset['values'] = dataset['values'] \
-                .apply(lambda x: pd.Series(x).rolling(window=self.compression_factor, center=False)
-                                             .mean()
-                                             .dropna()
-                                             .tolist()[::2])
-
-        # Extract derivative from time series
-        if self.derivative:
-            dataset['values'] = dataset['values'] \
-                .apply(lambda x: [x[i + 1] - x[i] for i in range(len(x) - 1)])
-
-        # Apply normalization on time series
-        if self.normalize:
-            dataset['values'] = dataset['values'] \
-                .apply(lambda x: (x - np.mean(x)) / np.std(x))
-
-        return dataset
+        self.patterns = []
+        self.classification_trees = {}
+        self.train_dataset = dataset
 
     def _load_patterns(self, csv_file_path: str):
         """ Load class indexes along with their representative patterns (LLR..)"""
@@ -73,7 +41,7 @@ class CDP:
         self.patterns = []
 
         # Read the data from the CSV file
-        with open(csv_file_path, mode='r') as file:
+        with open(csv_file_path, mode='r', encoding='utf-8') as file:
             reader = csv.DictReader(file)
 
             # Assuming the column headers are 'class_index' and 'class_pattern'
@@ -89,7 +57,7 @@ class CDP:
         headers = ['class_index', 'class_pattern']
 
         # Write the data to the CSV file
-        with open(csv_file_path, mode='w', newline='') as file:
+        with open(csv_file_path, mode='w', encoding='utf-8', newline='') as file:
             writer = csv.writer(file)
 
             # Write the header row
@@ -116,7 +84,7 @@ class CDP:
 
     @try_except
     def load_model(self):
-
+        """ Load model- classification trees, along with decision patterns """
         # Load model
         self._load_classification_trees(self.model_folder)
 
@@ -125,7 +93,7 @@ class CDP:
 
         # Sanity check
         for pattern in self.patterns:
-           logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
+            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     @try_except
     def fit(self):
@@ -133,7 +101,7 @@ class CDP:
         """ Fills the dictionary with classification trees. If model exists, tries to reuse
         trees if compatible with input arguments requirements"""
 
-        logger.info(f"Training...")
+        logger.info("Training...")
 
         shapelet_classifier = ShapeletClassifier(dataset=self.train_dataset
                                                  , classifiers_folder=self.model_folder
@@ -153,28 +121,28 @@ class CDP:
         #  [(0, 'LLRLL...LLRLLL')
         # ....
         # , (1, 'RRRRL...RRRRLL')]
-        for _, time_series in self.train_dataset.iterrows():
-            self.patterns.append((time_series['class_index']
-                                  , ''.join([classification_tree.build_classification_path(time_series)
-                                             for classification_tree in self.classification_trees.values()])))
+        for class_index, time_series in self.train_dataset.iterrows():
+            decision_pattern = ''.join([classification_tree.build_classification_path(time_series)
+                                       for classification_tree in self.classification_trees.values()]
+                                       )
+            self.patterns.append((class_index, decision_pattern))
 
         # Save patterns
         self._save_patterns(os.path.join(self.model_folder, PATTERNS_FILE_NAME))
 
     @try_except
-    def predict(self, dataset: pd.DataFrame) -> list:
+    def predict(self
+                , dataset: Dataset  # pd.DataFrame
+                ) -> list:
 
         """ Predict indexes of given time series datset"""
 
-        logger.info(f"Predicting...")
-
-        # Apply pre-processing, already applied to train dataset
-        processed_dataset = self._process_dataset(dataset)
+        logger.info("Predicting...")
 
         predicted_class_indexes = []
 
         # Classify by comparing decision patterns
-        for _, time_series in processed_dataset.iterrows():
+        for _, time_series in dataset.iterrows():
 
             # Find the pattern for given time series
             pattern = ''.join([classification_tree.build_classification_path(time_series)
@@ -195,9 +163,3 @@ class CDP:
             predicted_class_indexes.append(max(freq_dict, key=freq_dict.get))
 
         return predicted_class_indexes
-
-
-
-
-
-

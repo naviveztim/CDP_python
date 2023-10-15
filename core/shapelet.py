@@ -1,6 +1,5 @@
 import numpy as np
 from math import isclose
-
 from utils.logger import logger
 
 
@@ -20,7 +19,7 @@ class Shapelet:
 
     @left_class_index.setter
     def left_class_index(self, value):
-        if value is not None and type(value) is not int:
+        if value is None:  # and type(value) is not int:
             raise Exception('Left class index is incorrect!')
         self._left_class_index = value
 
@@ -30,7 +29,7 @@ class Shapelet:
 
     @right_class_index.setter
     def right_class_index(self, value):
-        if value is not None and type(value) is not int:
+        if value is None and type(value) is not int:
             raise Exception('Right class index is incorrect!')
         self._right_class_index = value
 

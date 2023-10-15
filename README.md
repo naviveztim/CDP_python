@@ -76,27 +76,27 @@ Table 1 contain training time and accuracies obtained by python implementation o
 from C# implementation. 
 Present Python implementation does not use any acceleration techniques such as numba, or multiprocessing. 
 
-Table 1. Training time and accuracy of **python implementation** of CDP method
+Table 1. Training time and accuracy of **python implementation** with numba of CDP method
 
-| UCR Dataset  | Num. classes | Num. train samples | Num. test samples | Training time, [sec] | Accuracy, [%] | Compression rate | Num. decision trees | Normalize | Derivative |
-|--------------|--------------|--------------------|-------------------|----------------------|---------------|------------------|---------------------|-----------|------------|
-| Swedish Leaf | 15           | 500                | 625               | 455                  | 87.2%         | 2                | 500                 | No        | No         |
-| Beef         | 5            | 30                 | 30                | 556                  | 70.1%         | 1                | 200                 | Yes       | Yes        |
-| OliveOil     | 4            | 30                 | 30                | 320                  | 73.2%         | 2                | 200                 | Yes       | No         |
-| Symbols      | 6            | 25                 | 995               | 1273                 | 69.3%         | 4                | 600                 | Yes       | Yes        |
-| OsuLeaf      | 6            | 200                | 242               | 1346                 | 95.1%         | 4                | 800                 | Yes       | Yes        |
+| UCR Dataset | Num. classes | Num. train samples | Num. test samples | Training time, [sec] | Accuracy, [%] | Compression rate | Num. decision trees | Normalize | Derivative |
+|-------------|--------------|--------------------|-------------------|----------------------|---------------|------------------|---------------------|-----------|------------|
+| SwedishLeaf | 15           | 500                | 625               | 99                   | 85.4%         | 2                | 500                 | No        | No         |
+| Beef        | 5            | 30                 | 30                | 43                   | 70.1%         | 1                | 200                 | Yes       | Yes        |
+| OliveOil    | 4            | 30                 | 30                | 35                   | 76.6%         | 2                | 200                 | Yes       | No         |
+| Symbols     | 6            | 25                 | 995               | 62                   | 86.9%         | 4                | 600                 | Yes       | Yes        |
+| OsuLeaf     | 6            | 200                | 242               | 98                   | 90.1%         | 4                | 800                 | Yes       | Yes        |
 
 There is also an implementation of CDP algorithm in C#, which on the same CPU produced even better results (Table 2)
 
 Table 2. Training time and accuracy of **C# implementation** of CDP method
 
-| UCR Dataset  | Num. classes | Num. train samples | Num. test samples | Training time, [sec] | Accuracy, [%] | Compression rate | Num. decision trees | Normalize | Derivative |
-|--------------|--------------|--------------------|-------------------|----------------------|---------------|------------------|---------------------|-----------|------------|
-| Swedish Leaf | 15           | 500                | 625               | 16.3                 | 92.7%         | 2                | 700                 | No        | No         |
-| Beef         | 5            | 30                 | 30                | 24.1                 | 86.8%         | 1                | 400                 | Yes       | Yes        |
-| OliveOil     | 4            | 30                 | 30                | 71.3                 | 90.1%         | 2                | 200                 | Yes       | No         |
-| Symbols      | 6            | 25                 | 995               | 3.8                  | 95.6%         | 4                | 600                 | Yes       | Yes        |
-| OsuLeaf      | 6            | 200                | 242               | 15.1                 | 88.9%         | 4                | 800                 | Yes       | Yes        |
+| UCR Dataset | Num. classes | Num. train samples | Num. test samples | Training time, [sec] | Accuracy, [%] | Compression rate | Num. decision trees | Normalize | Derivative |
+|-------------|--------------|--------------------|-------------------|----------------------|---------------|------------------|---------------------|-----------|------------|
+| SwedishLeaf | 15           | 500                | 625               | 16                   | 92.7%         | 2                | 700                 | No        | No         |
+| Beef        | 5            | 30                 | 30                | 24                   | 86.8%         | 1                | 400                 | Yes       | Yes        |
+| OliveOil    | 4            | 30                 | 30                | 71                   | 90.1%         | 2                | 200                 | Yes       | No         |
+| Symbols     | 6            | 25                 | 995               | 4                    | 95.6%         | 4                | 600                 | Yes       | Yes        |
+| OsuLeaf     | 6            | 200                | 242               | 15                   | 88.9%         | 4                | 800                 | Yes       | Yes        |
 
 We tested several methods for time series classification on 40 datasets from UCR database. CDP methods stays well in terms 
 of accuracy as shown on figure below. 

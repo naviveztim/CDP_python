@@ -2,19 +2,22 @@ import os
 from collections import Counter
 from itertools import chain, combinations, permutations
 import numpy as np
-import pandas as pd
-
 from core.shapelet import Shapelet
 from core.pso import ShapeletsPso
 from utils.utils import subsequent_distance
 from utils.btree import BTree
 from utils.logger import logger
+from utils.dataset import Dataset
+import numba
+from numba import NumbaWarning
+import warnings
+warnings.filterwarnings("ignore", category=NumbaWarning)
 
 
 class ShapeletClassifier:
 
     def __init__(self
-                 , dataset: pd.DataFrame
+                 , dataset: Dataset
                  , classifiers_folder: str
                  , num_classes_per_tree: int
                  , pattern_length: int):
@@ -25,17 +28,32 @@ class ShapeletClassifier:
         self.balanced_dataset = self._get_balanced_dataset(dataset)
 
     @staticmethod
-    def _get_balanced_dataset(dataset: pd.DataFrame):
+    def _get_balanced_dataset(dataset: Dataset) -> Dataset:
         """ Create dataset which contains 10 samples from each class with replacement
         """
-        balanced_dataset = pd.DataFrame()
-        if dataset is not None and not dataset.empty:
-            for i in dataset['class_index'].unique():
-                balanced_dataset = \
-                    pd.concat([balanced_dataset,
-                               dataset.loc[dataset['class_index'] == i].sample(10, replace=True)
-                               ])
-        return balanced_dataset.reset_index().drop(columns=['index'])
+
+        # Create a dataset containing 10 samples from each class with replacement.
+        balanced_class_indexes = []
+        balanced_values = []
+
+        unque_class_indexes = np.unique(dataset.class_indexes)
+        num_samlpes = min(10, len(unque_class_indexes))
+        for class_index in unque_class_indexes:
+            # Get the indices of the current class
+            class_indices = np.where(dataset.class_indexes == class_index)[0]
+
+            # Sample 'num_samples_per_class' indices with replacement
+            sampled_indices = np.random.choice(class_indices, num_samlpes, replace=True)
+
+            # Append the sampled class indexes and values to the balanced dataset
+            balanced_class_indexes.extend([class_index] * num_samlpes)
+            balanced_values.extend(dataset.values[sampled_indices])
+
+        # Create the new balanced dataset
+        return Dataset(None
+                       , None
+                       , class_indexes=np.array(balanced_class_indexes)
+                       , values=np.array(balanced_values))
 
     @staticmethod
     def _build_tree(permutation: tuple):
@@ -51,24 +69,30 @@ class ShapeletClassifier:
         return tree
 
     @staticmethod
-    def _count_left_right(shapelet: Shapelet, class_dataset: pd.DataFrame):
+    def _count_left_right(shapelet: Shapelet, class_dataset: Dataset):
 
         # Take number of time series which distance to the shapelet is less than optimal split distance
         count_left = 0
-        for values in class_dataset['values']:
+        for values in class_dataset.values:
             if subsequent_distance(values, shapelet.values) < shapelet.optimal_split_distance:
                 count_left += 1
 
-        return count_left, class_dataset.shape[0] - count_left
+        return count_left, class_dataset.values.shape[0] - count_left
 
-    def _split_classes(self, shapelet: Shapelet, class_index_a: int, class_index_b: int, dataset: pd.DataFrame):
+    @numba.jit()
+    def _split_classes(self
+                       , shapelet: Shapelet
+                       , class_index_a: int
+                       , class_index_b: int
+                       , dataset: Dataset
+                       ):
 
         """ Assign left and right class index to given shapelet"""
 
-        class_dataset_a = dataset[dataset.class_index == class_index_a]
+        class_dataset_a = dataset.filter_by_class(class_index_a)
         count_left_a, count_right_a = self._count_left_right(shapelet, class_dataset_a)
 
-        class_dataset_b = dataset[dataset.class_index == class_index_b]
+        class_dataset_b = dataset.filter_by_class(class_index_b)
         count_left_b, count_right_b = self._count_left_right(shapelet, class_dataset_b)
 
         # Assign class index, for which majority of samples have
@@ -78,17 +102,22 @@ class ShapeletClassifier:
     def _find_shapelet(self, class_index_a: int, class_index_b: int) -> Shapelet:
         """ Find shapelet and its parameters such as optimal split distance, left and right class index"""
 
-        train_dataset = self.balanced_dataset[self.balanced_dataset['class_index']
-                                                  .isin([class_index_a, class_index_b])]
+        class_indices = np.concatenate(
+            (np.where(self.balanced_dataset.class_indexes == class_index_a)[0]
+             , np.where(self.balanced_dataset.class_indexes == class_index_b)[0])
+            )
+        train_dataset = Dataset(class_indexes=self.balanced_dataset.class_indexes[class_indices]
+                                , values=self.balanced_dataset.values[class_indices])
+
         # Start PSO algorithm to find shapelet that separates two classes
         min_length = 3
-        max_length = min(len(x) for x in train_dataset['values'])
+        max_length = min(len(x) for x in train_dataset.values)
         step = (max_length - min_length)//20
         step = step if step > 0 else 1
-        num_classes = len(self.balanced_dataset['class_index'].unique())
+        num_classes = len(np.unique(self.balanced_dataset.class_indexes))
         step = step if num_classes >= 4 else 1
-        min_train_value = np.min(train_dataset.iloc[0]['values'])
-        max_train_value = np.max(train_dataset.iloc[0]['values'])
+        min_train_value = np.min(train_dataset.values[0])
+        max_train_value = np.max(train_dataset.values[0])
         shapelet_pso = ShapeletsPso(min_length=min_length
                                     , max_length=max_length
                                     , step=step
@@ -131,30 +160,31 @@ class ShapeletClassifier:
 
         return required_classificators_names
 
+    @numba.jit()
     def _test_tree_accuracy(self, tree: BTree, classes_in_combination: tuple):
 
-        """ Finds average accuracy of given classification tree
-            """
+        """ Finds average accuracy of given classification tree """
 
         for class_index in classes_in_combination:
             # Average accuracy
             acc = 0.0
 
             # Extract the time series with given class index
-            train_dataset = \
-                self.balanced_dataset.loc[self.balanced_dataset['class_index'] == class_index].sample(n=10)
+            class_indices = np.where(self.balanced_dataset.class_indexes == class_index)[0]
+            sampled_indices = np.random.choice(class_indices, 10) # , replace=True
+            train_datasets_values = self.balanced_dataset.values[sampled_indices]
 
             # Number of correctly classified time series for given index
             num_correctly_classified = 0
 
-            for _, time_series in train_dataset.iterrows():
+            for time_series in train_datasets_values:
                 current_node = tree.root
 
                 # Iterate the tree
                 while True:
                     if current_node is None:
                         break
-                    distance = subsequent_distance(time_series["values"], current_node.shapelet.values)
+                    distance = subsequent_distance(time_series, current_node.shapelet.values)
 
                     # Left wing
                     if distance <= current_node.shapelet.optimal_split_distance:
@@ -174,10 +204,11 @@ class ShapeletClassifier:
                             num_correctly_classified += 1
                         break
 
-            acc += num_correctly_classified/train_dataset.shape[0]
+            acc += num_correctly_classified/train_datasets_values.shape[0]
 
         return acc
 
+    @numba.jit()
     def _find_most_accurate_tree(self, shapelets: list, classes_in_combination: tuple):
 
         """ Tries variety of combinations to build most accurate tree"""
@@ -198,7 +229,7 @@ class ShapeletClassifier:
 
     def _create_group(self) -> list:
 
-        class_indexes = self.balanced_dataset['class_index'].unique()
+        class_indexes = np.unique(self.balanced_dataset.class_indexes)
         num_class_indexes = len(class_indexes)
         num_allowed_indexes = self.pattern_length * self.num_classes_per_tree // num_class_indexes
 
@@ -227,6 +258,7 @@ class ShapeletClassifier:
 
         return valid_combs
 
+    @numba.jit()
     def _create_and_train_tree(self, classes_in_combination: tuple) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""

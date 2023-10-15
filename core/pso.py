@@ -1,9 +1,14 @@
+""" Particle Swarm Optimization (PSO) approach for finding
+    shapelet that mostly separate two classes of time series"""
 import sys
 import numpy as np
-import pandas as pd
-
 from utils.utils import assess_candidate_position
 from utils.logger import logger
+from utils.dataset import Dataset
+import numba
+from numba import NumbaWarning
+import warnings
+warnings.filterwarnings("ignore", category=NumbaWarning)
 
 
 class CandidateShapelet:
@@ -50,7 +55,8 @@ class ShapeletsPso:
                  , step: int
                  , min_position: float, max_position: float
                  , min_velocity: float, max_velocity: float
-                 , train_dataframe: pd.DataFrame):
+                 , train_dataframe: Dataset
+                 ):
 
         self.swarm: list = []
         self.min_position: float = min_position
@@ -60,7 +66,7 @@ class ShapeletsPso:
         self.min_particle_length: int = min_length
         self.max_particle_length: int = max_length
         self.step: int = step
-        self.train_dataframe = train_dataframe.to_dict('records')
+        self.train_dataframe = train_dataframe
 
         # Init best particle
         self.best_particle: CandidateShapelet = CandidateShapelet(max_length
@@ -69,6 +75,7 @@ class ShapeletsPso:
         # Init swarm
         self._init_swarm()
 
+    @numba.jit()
     def _init_swarm(self):
         """ Initialize candidate shapelets' parameters """
 
@@ -80,7 +87,9 @@ class ShapeletsPso:
                                           , self.min_position, self.max_position)
 
             # Assess candidate position
-            information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
+            information_gain, split_point = \
+                assess_candidate_position(candidate.position
+                                          , self.train_dataframe)
 
             # Move candidate towards best position
             if candidate.best_information_gain < information_gain:
@@ -96,6 +105,7 @@ class ShapeletsPso:
             if candidate.best_information_gain > self.best_particle.best_information_gain:
                 self.best_particle.copy(candidate)
 
+    @numba.jit()
     def start_pso(self):
         """ Find the best shapelet that distinguishes time series from two classes"""
 
@@ -110,18 +120,20 @@ class ShapeletsPso:
                 # Update candidate velocity
                 for i in range(candidate.length):
 
-                    r1 = np.random.rand()
-                    r2 = np.random.rand()
+                    r_1 = np.random.rand()
+                    r_2 = np.random.rand()
 
                     candidate.velocity[i] = self.W * candidate.velocity[i] + \
-                        self.C1*r1*(candidate.best_position[i] - candidate.position[i]) + \
-                        self.C2*r2*(self.best_particle.position[i] - candidate.position[i])
+                        self.C1*r_1*(candidate.best_position[i] - candidate.position[i]) + \
+                        self.C2*r_2*(self.best_particle.position[i] - candidate.position[i])
 
                 # Update candidate position
                 candidate.position += candidate.velocity
 
                 # Check the fitness of current candidate
-                information_gain, split_point = assess_candidate_position(candidate.position, self.train_dataframe)
+                information_gain, split_point = \
+                    assess_candidate_position(candidate.position
+                                              , self.train_dataframe)
 
                 # Move candidate towards best position
                 if candidate.best_information_gain < information_gain:
@@ -136,10 +148,7 @@ class ShapeletsPso:
             old_best_gain = new_best_gain
             new_best_gain = self.best_particle.best_information_gain
 
-            logger.debug(f'Iteration: {iteration}')
-
             if abs(old_best_gain - new_best_gain) <= ShapeletsPso.ITERATION_EPSILON:
                 break
 
         self.best_particle.position = self.best_particle.position[:self.best_particle.length]
-
