@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 
-NAME = 'cdptsc'
+NAME = 'cdp_tsc'
 DESCRIPTION = 'A python implementation of Concatenated-Decision-Path method for time series classification'
 with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
