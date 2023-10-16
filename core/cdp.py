@@ -22,12 +22,12 @@ class CDP:
                  , dataset: Dataset
                  , model_folder: str
                  , num_classes_per_tree: int
-                 , pattern_length: int
+                 , num_trees: int
                  ):
 
         self.model_folder = model_folder
         self.num_classes_per_tree = num_classes_per_tree
-        self.pattern_length = pattern_length
+        self.num_trees = num_trees
         self.patterns = []
         self.classification_trees = {}
         self.train_dataset = dataset
@@ -104,7 +104,7 @@ class CDP:
         shapelet_classifier = ShapeletClassifier(dataset=self.train_dataset
                                                  , classifiers_folder=self.model_folder
                                                  , num_classes_per_tree=self.num_classes_per_tree
-                                                 , pattern_length=self.pattern_length)
+                                                 , num_trees=self.num_trees)
 
         # Load existing classifiers
         self._load_classification_trees(self.model_folder)

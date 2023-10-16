@@ -20,11 +20,11 @@ class ShapeletClassifier:
                  , dataset: Dataset
                  , classifiers_folder: str
                  , num_classes_per_tree: int
-                 , pattern_length: int):
+                 , num_trees: int):
 
         self.classifiers_folder = classifiers_folder
         self.num_classes_per_tree = num_classes_per_tree
-        self.pattern_length = pattern_length
+        self.num_trees = num_trees
         self.balanced_dataset = self._get_balanced_dataset(dataset)
 
     @staticmethod
@@ -233,7 +233,7 @@ class ShapeletClassifier:
 
         class_indexes = np.unique(self.balanced_dataset.class_indexes)
         num_class_indexes = len(class_indexes)
-        num_allowed_indexes = self.pattern_length * self.num_classes_per_tree // num_class_indexes
+        num_allowed_indexes = self.num_trees * self.num_classes_per_tree // num_class_indexes
 
         # Generate all possible combinations of 3 classes from the range 0-15
         combs = list(combinations(class_indexes, self.num_classes_per_tree))

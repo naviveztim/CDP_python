@@ -38,10 +38,10 @@ def get_arguments() -> argparse.Namespace:
     parser.add_argument('-normalize', '--normalize'
                         , help='Normalize the original signal? Default: Do not normalize'
                         , required=False, action='store_true')
-    parser.add_argument('-nodes', '--nodes'
+    parser.add_argument('-num_nodes', '--num_nodes'
                         , help='Specify number of nodes in decision tree. Default: 2'
                         , required=False, default=2)
-    parser.add_argument('-trees', '--trees'
+    parser.add_argument('-num_trees', '--num_trees'
                         , help='Specify number decision trees.'
                         , required=False, default=100)
 
@@ -66,13 +66,13 @@ def show_arguments(args: argparse.Namespace):
     logger.info(f'Compress factor: {args.compress}')
     logger.info(f'Derivative: {args.derivative}')
     logger.info(f'Normalize: {args.normalize}')
-    logger.info(f'Number of nodes in tree: {args.nodes}')
-    logger.info(f'Number of trees in decision pattern: {args.trees}')
+    logger.info(f'Number of nodes in tree: {args.num_nodes}')
+    logger.info(f'Number of trees in decision pattern: {args.num_trees}')
 
 
 def main():
 
-    """ Main process function- train and evaluate prediction on given dataset"""
+    """ Main process function-train and evaluate prediction on given dataset"""
     np.random.seed(42)
 
     # Get command line arguments
@@ -85,7 +85,7 @@ def main():
     train_dataset = Dataset(filepath=args.train
                             , delimiter=args.delimiter)
 
-    # Apply pre-processing, defined by input parameters
+    # Apply pre-processing
     train_dataset = process_dataset(train_dataset
                                     , compression_factor=int(args.compress)
                                     , normalize=args.normalize
@@ -94,8 +94,8 @@ def main():
     # Initialize CDP
     cdp = CDP(dataset=train_dataset
               , model_folder=args.model_folder
-              , num_classes_per_tree=int(args.nodes)
-              , pattern_length=int(args.trees)
+              , num_classes_per_tree=int(args.num_nodes)
+              , num_trees=int(args.num_trees)
               )
 
     # Train/Load the model
@@ -104,6 +104,7 @@ def main():
     else:
         cdp.load_model()
 
+    # Predict class indexes
     if args.predict:
 
         # Obtain test dataset

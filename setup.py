@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 
-NAME = 'cdp-ts'
+NAME = 'cdptsc'
 DESCRIPTION = 'A python implementation of Concatenated-Decision-Path method for time series classification'
 with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
@@ -13,14 +13,14 @@ MAINTAINER_EMAIL = 'cdp_project@outlook.com'
 URL = 'https://github.com/naviveztim/CDP_python'
 LICENSE = 'new BSD'
 DOWNLOAD_URL = 'https://github.com/naviveztim/CDP_python'
-VERSION = 0.13
-INSTALL_REQUIRES = ['numpy>=1.19.5',
-                    'pandas>=1.1.5'
+VERSION = '1.0.27'
+INSTALL_REQUIRES = ['numpy>=1.19.5'
+                    'numba~=0.53.1'
+                    'setuptools~=58.0.4'
                     ]
 CLASSIFIERS = ['Development Status :: 3 - Alpha',
                'Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
-               'License :: OSI Approved',
                'Programming Language :: Python',
                'Topic :: Software Development',
                'Topic :: Scientific/Engineering',
