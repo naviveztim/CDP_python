@@ -19,7 +19,6 @@ class CDP:
     """ Concatenated Decision Paths (CDP) method implementation"""
 
     def __init__(self
-                 , dataset: Dataset
                  , model_folder: str
                  , num_classes_per_tree: int
                  , num_trees: int
@@ -30,7 +29,6 @@ class CDP:
         self.num_trees = num_trees
         self.patterns = []
         self.classification_trees = {}
-        self.train_dataset = dataset
 
     def _load_patterns(self, csv_file_path: str):
         """ Load class indexes along with their representative patterns (LLR..)"""
@@ -94,14 +92,14 @@ class CDP:
             logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     @try_except
-    def fit(self):
+    def fit(self, train_dataset: Dataset):
 
         """ Fills the dictionary with classification trees. If model exists, tries to reuse
         trees if compatible with input arguments requirements"""
 
         logger.info("Training...")
 
-        shapelet_classifier = ShapeletClassifier(dataset=self.train_dataset
+        shapelet_classifier = ShapeletClassifier(dataset=train_dataset
                                                  , classifiers_folder=self.model_folder
                                                  , num_classes_per_tree=self.num_classes_per_tree
                                                  , num_trees=self.num_trees)
@@ -119,7 +117,7 @@ class CDP:
         #  [(0, 'LLRLL...LLRLLL')
         # ....
         # , (1, 'RRRRL...RRRRLL')]
-        for class_index, time_series in self.train_dataset.iterrows():
+        for class_index, time_series in train_dataset.iterrows():
             decision_pattern = ''.join([classification_tree.build_classification_pattern(time_series)
                                        for classification_tree in self.classification_trees.values()]
                                        )
@@ -133,7 +131,7 @@ class CDP:
                 , dataset: Dataset  # pd.DataFrame
                 ) -> list:
 
-        """ Predict indexes of given time series datset"""
+        """ Predict indexes of given time series dataset"""
 
         logger.info("Predicting...")
 

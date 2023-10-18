@@ -15,21 +15,27 @@ pip install cdp-tsc
 
 <pre>
 from cdp_tsc.core.cdp import CDP
-from cdp_tsc.utils.utils import from_ucr_format, to_ucr_format
+from cdp_tsc.utils.logger import logger
+from cdp_tsc.utils.dataset import Dataset
+from cdp_tsc.utils.utils import process_dataset
 
-# Obtain train dataset from UCR format file
-train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<'delimiter'>)
+# Obtain train dataset from ucr type csv file
+train_dataset = Dataset(filepath=<filepath>, delimiter=<delimiter>)
+
+# Apply pre-processing
+train_dataset = process_dataset(train_dataset
+                                , compression_factor=<compression factor: int = 1,2,3,...>)
+                                , normalize=<normalize: bool>
+                                , derivative=<derivative: bool>)
 
 # Initialize CDP
-cdp = CDP(dataset=train_dataset
-          , model_folder=<'model folder path'>
-          , num_classes_per_tree=2
-          , pattern_length=100
-          , compression_factor=1
-          , derivative=False
-          , normalize=False)
+cdp = CDP(model_folder=<folder where models will be stored>
+          , num_classes_per_tree=int(<number of nides in decision tree: usually 2>)
+          , num_trees=int(<number of decision trees>)
+          )
 
-cdp.fit()
+# Train the model
+cdp.fit(train_dataset)
 
 # The result will be model file (.pickle), along with decision patterns file (.csv) produced in 
 given model folder. 
@@ -38,31 +44,30 @@ given model folder.
 ### Testing 
 
 <pre>
-# Initialize CDP
-cdp = CDP(dataset=None
-          , model_folder=<'model folder path'>
-          , num_classes_per_tree=2
-          , pattern_length=100
-          , compression_factor=1
-          , derivative=False
-          , normalize=False)
+from cdp_tsc.core.cdp import CDP
+from cdp_tsc.utils.logger import logger
+from cdp_tsc.utils.dataset import Dataset
+from cdp_tsc.utils.utils import process_dataset
 
-# Get already trained model 
+# Initialize CDP
+cdp = CDP(model_folder=<folder where models will be read from>
+               , num_classes_per_tree=int(<number of nides in decision tree: usually 2>)
+              , num_trees=int(<number of decision trees>)
+              )
 cdp.load_model()
 
-# Obtain test dataset from UCR format file 
-test_dataset = from_ucr(<'test file path'>, delimiter=',')
+# Obtain test dataset- it contain no indexes, just one time series per row
+dataset = Dataset(filepath=<filepath>, delimiter=<delimiter>
+                  , no_indexes=True)
+
+# Apply pre-processing, already applied to train dataset
+dataset = process_dataset(dataset
+                            , compression_factor=<compression factor: int = 1,2,3,...>)
+                            , normalize=<normalize: bool>
+                            , derivative=<derivative: bool>)
 
 # Predict class indexes of a test dataset
-predicted_class_indexes = cdp.predict(test_dataset)
-
-# Iterate through predicted indexes and check correspondence with the original
-num_correct_predictions = 0
-for i, row in test_dataset.iterrows():
-    if row['class_index'] == predicted_class_indexes[i]:
-        num_correct_predictions += 1
-
-print(f"Accuracy: {100 * round(num_correct_predictions / len(predicted_class_indexes), 2)}%")
+predicted_class_indexes = cdp2.predict(dataset)
 
 </pre>
 

@@ -92,17 +92,21 @@ def main():
                                     , derivative=args.derivative)
 
     # Initialize CDP
-    cdp = CDP(dataset=train_dataset
-              , model_folder=args.model_folder
+    cdp = CDP(model_folder=args.model_folder
               , num_classes_per_tree=int(args.num_nodes)
               , num_trees=int(args.num_trees)
               )
 
-    # Train/Load the model
+    # Train the model
     if args.train:
-        cdp.fit()
-    else:
-        cdp.load_model()
+        cdp.fit(train_dataset)
+
+    # Load already trained model
+    cdp2 = CDP(model_folder=args.model_folder
+               , num_classes_per_tree=int(args.num_nodes)
+               , num_trees=int(args.num_trees)
+               )
+    cdp2.load_model()
 
     # Predict class indexes
     if args.predict:
@@ -120,7 +124,7 @@ def main():
                                   )
 
         # Predict class indexes of a test dataset
-        dataset.class_indexes = cdp.predict(dataset)
+        dataset.class_indexes = cdp2.predict(dataset)
 
         # Format result filename
         original_filename = os.path.splitext(os.path.basename(args.predict))[0]
@@ -144,7 +148,7 @@ def main():
                                        )
 
         # Predict class indexes of a test dataset
-        predicted_class_indexes = cdp.predict(test_dataset)
+        predicted_class_indexes = cdp2.predict(test_dataset)
 
         # Iterate through predicted indexes and check correspondence with the original
         num_correct_predictions = 0

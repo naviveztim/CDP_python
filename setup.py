@@ -18,7 +18,7 @@ INSTALL_REQUIRES = [
     "numba>=0.53.1",
     "setuptools>=58.0.4"
 ]
-VERSION = '0.1.35'
+VERSION = '0.1.39'
 CLASSIFIERS = ['Development Status :: 3 - Alpha',
                'Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
