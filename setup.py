@@ -3,7 +3,7 @@
 from setuptools import find_packages, setup
 
 
-NAME = 'cdp_tsc'
+NAME = 'cdptsc'
 DESCRIPTION = 'A python implementation of Concatenated-Decision-Path method for time series classification'
 with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
@@ -18,7 +18,7 @@ INSTALL_REQUIRES = [
     "numba>=0.53.1",
     "setuptools>=58.0.4"
 ]
-VERSION = '0.1.28'
+VERSION = '0.1.29'
 CLASSIFIERS = ['Development Status :: 3 - Alpha',
                'Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
