@@ -1,4 +1,4 @@
-name: cdptsc
+name: cdp-tsc
 dependencies:
   - numpy
   - pandas
