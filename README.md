@@ -9,13 +9,13 @@ Python implementation of the CDP algorithm posses following advantages:
 - **very simple** to maintain (consists of 8 python files, spread in two folders)
 
 ### Installation 
-pip install cdptsc 
+pip install cdp-tsc 
 
 ### Training 
 
 <pre>
-from cdptsc.core.cdp import CDP
-from cdptsc.utils.utils import from_ucr_format, to_ucr_format
+from cdp_tsc.core.cdp import CDP
+from cdp_tsc.utils.utils import from_ucr_format, to_ucr_format
 
 # Obtain train dataset from UCR format file
 train_dataset = from_ucr(filepath=<'train file path'>, delimiter=<'delimiter'>)
