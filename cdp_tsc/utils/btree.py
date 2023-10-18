@@ -1,5 +1,5 @@
-from utils.utils import subsequent_distance
-from core.shapelet import Shapelet
+from cdp_tsc.utils.utils import subsequent_distance
+from cdp_tsc.core.shapelet import Shapelet
 import numpy as np
 
 

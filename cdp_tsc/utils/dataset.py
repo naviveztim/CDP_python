@@ -1,6 +1,6 @@
 import numpy as np
 import csv
-from utils.logger import logger
+from cdp_tsc.utils.logger import logger
 
 
 class Dataset:
