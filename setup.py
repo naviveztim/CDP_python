@@ -13,11 +13,12 @@ MAINTAINER_EMAIL = 'cdp_project@outlook.com'
 URL = 'https://github.com/naviveztim/CDP_python'
 LICENSE = 'new BSD'
 DOWNLOAD_URL = 'https://github.com/naviveztim/CDP_python'
-VERSION = '1.0.27'
-INSTALL_REQUIRES = ['numpy>=1.19.5'
-                    'numba~=0.53.1'
-                    'setuptools~=58.0.4'
-                    ]
+INSTALL_REQUIRES = [
+    "numpy>=1.19.5",
+    "numba>=0.53.1",
+    "setuptools>=58.0.4"
+]
+VERSION = '0.1.28'
 CLASSIFIERS = ['Development Status :: 3 - Alpha',
                'Intended Audience :: Science/Research',
                'Intended Audience :: Developers',
@@ -36,6 +37,7 @@ CLASSIFIERS = ['Development Status :: 3 - Alpha',
 
 setup(name=NAME,
       maintainer=MAINTAINER,
+      author=MAINTAINER,
       maintainer_email=MAINTAINER_EMAIL,
       description=DESCRIPTION,
       license=LICENSE,
@@ -47,5 +49,5 @@ setup(name=NAME,
       zip_safe=False,
       classifiers=CLASSIFIERS,
       packages=find_packages(),
-      install_requires=INSTALL_REQUIRES,
+      install_requires=INSTALL_REQUIRES
       )
