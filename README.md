@@ -110,7 +110,8 @@ Table 1. Training time and accuracy of **python implementation** with numba of C
 | Symbols     | 6            | 25                 | 995               | 62                   | 86.9%         | 4                | 600                 | Yes       | Yes        |
 | OsuLeaf     | 6            | 200                | 242               | 98                   | 90.1%         | 4                | 800                 | Yes       | Yes        |
 
-There is also an implementation of CDP algorithm in C#, which on the same CPU produced even better results (Table 2)
+There is also an implementation of CDP algorithm in C#, which on the same CPU produced even better results 
+(Table 2)
 
 Table 2. Training time and accuracy of **C# implementation** of CDP method
 
