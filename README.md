@@ -11,63 +11,82 @@ Python implementation of the CDP algorithm posses following advantages:
 ### Installation 
 pip install cdp-tsc
 
-### Training 
+### Training & Testing 
 
 <pre>
 from cdp_tsc.core.cdp import CDP
 from cdp_tsc.utils.logger import logger
 from cdp_tsc.utils.dataset import Dataset
 from cdp_tsc.utils.utils import process_dataset
+import numpy as np
+from functools import wraps
 
-# Obtain train dataset from ucr type csv file
-train_dataset = Dataset(filepath=<filepath>, delimiter=<delimiter>)
+TRAIN_DATASET_PATH = <<train filepath>>
+TEST_DATASET_PATH = <<test filepath>>
+DELIMITER = "\t"
+MODELS_FOLDER_PATH = <<model folder path>>
+COMPRESSION_FACTOR = <<1,2,3,4>>
+NORMALIZE = True/False
+DERIVATIVE = True/False
+NUM_CLASSES_PER_TREE = 2
+NUM_TREES = <<some number of trees>>
 
-# Apply pre-processing
-train_dataset = process_dataset(train_dataset
-                                , compression_factor=<compression factor: int = 1,2,3,...>)
-                                , normalize=<normalize: bool>
-                                , derivative=<derivative: bool>)
 
-# Initialize CDP
-cdp = CDP(model_folder=<folder where models will be stored>
-          , num_classes_per_tree=int(<number of nides in decision tree: usually 2>)
-          , num_trees=int(<number of decision trees>)
-          )
+def train() -> CDP:
+    """ Demo function that shows creating and training of CDP model"""
+s
+    # Obtain train dataset from 'ucr' type csv file
+    train_dataset = Dataset(filepath=TRAIN_DATASET_PATH
+                            , delimiter=DELIMITER)
 
-# Train the model
-cdp.fit(train_dataset)
+    # Apply pre-processing
+    train_dataset = process_dataset(dataset=train_dataset
+                                    , compression_factor=COMPRESSION_FACTOR
+                                    , normalize=NORMALIZE
+                                    , derivative=DERIVATIVE)
 
-# The result will be model file (.pickle), along with decision patterns file (.csv) produced in 
-given model folder. 
-</pre>
-
-### Testing 
-
-<pre>
-from cdp_tsc.core.cdp import CDP
-from cdp_tsc.utils.logger import logger
-from cdp_tsc.utils.dataset import Dataset
-from cdp_tsc.utils.utils import process_dataset
-
-# Initialize CDP
-cdp = CDP(model_folder=<folder where models will be read from>
-               , num_classes_per_tree=int(<number of nides in decision tree: usually 2>)
-              , num_trees=int(<number of decision trees>)
+    # Initialize CDP
+    cdp = CDP(model_folder=MODELS_FOLDER_PATH
+              , num_classes_per_tree=NUM_CLASSES_PER_TREE
+              , num_trees=NUM_TREES
               )
-cdp.load_model()
 
-# Obtain test dataset- it contain no indexes, just one time series per row
-dataset = Dataset(filepath=<filepath>, delimiter=<delimiter>
-                  , no_indexes=True)
+    # Train the model
+    cdp.fit(train_dataset)
 
-# Apply pre-processing, already applied to train dataset
-dataset = process_dataset(dataset
-                            , compression_factor=<compression factor: int = 1,2,3,...>)
-                            , normalize=<normalize: bool>
-                            , derivative=<derivative: bool>)
 
-# Predict class indexes of a test dataset
-predicted_class_indexes = cdp2.predict(dataset)
+def test():
+
+    # Initialize CDP
+    cdp2 = CDP(model_folder=MODELS_FOLDER_PATH
+               , num_classes_per_tree=NUM_CLASSES_PER_TREE
+               , num_trees=NUM_TREES
+               )
+
+    # Load already trained model 
+    cdp2.load_model()
+
+    # Obtain test dataset
+    test_dataset = Dataset(filepath=TEST_DATASET_PATH
+                           , delimiter=DELIMITER)
+
+    # Apply pre-processing, already applied to train dataset
+    test_dataset = process_dataset(dataset=test_dataset
+                                   , compression_factor=COMPRESSION_FACTOR
+                                   , normalize=NORMALIZE
+                                   , derivative=DERIVATIVE)
+
+    # Predict class indexes of a test dataset
+    predicted_class_indexes = cdp2.predict(test_dataset)
+
+    # Check how many of predicted class indexes is correct 
+    matching_count = np.sum((np.array(predicted_class_indexes) == test_dataset.class_indexes))
+    logger.info(f"Accuracy: {100*round(matching_count/len(predicted_class_indexes), 4)}%")
+
+
+if __name__ == "__main__":
+    train()
+    test()
 
 </pre>
 

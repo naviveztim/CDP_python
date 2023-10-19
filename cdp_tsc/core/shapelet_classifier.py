@@ -8,10 +8,6 @@ from cdp_tsc.utils.utils import subsequent_distance
 from cdp_tsc.utils.btree import BTree
 from cdp_tsc.utils.logger import logger
 from cdp_tsc.utils.dataset import Dataset
-import numba
-from numba import NumbaWarning
-import warnings
-warnings.filterwarnings("ignore", category=NumbaWarning)
 
 
 class ShapeletClassifier:
@@ -79,7 +75,6 @@ class ShapeletClassifier:
 
         return count_left, class_dataset.values.shape[0] - count_left
 
-    @numba.jit()
     def _split_classes(self
                        , shapelet: Shapelet
                        , class_index_a: int
@@ -160,7 +155,6 @@ class ShapeletClassifier:
 
         return required_classificators_names
 
-    @numba.jit()
     def _test_tree_accuracy(self, tree: BTree, classes_in_combination: tuple):
 
         """ Finds average accuracy of given classification tree """
@@ -208,7 +202,6 @@ class ShapeletClassifier:
 
         return acc
 
-    @numba.jit()
     def _find_most_accurate_tree(self, shapelets: list, classes_in_combination: tuple):
 
         """ Tries variety of combinations to build most accurate tree"""
@@ -260,7 +253,6 @@ class ShapeletClassifier:
 
         return valid_combs
 
-    @numba.jit()
     def _create_and_train_tree(self, classes_in_combination: tuple) -> BTree:
         """ Find shapelets for every pair of classes in given combination. Build the classification
         tree and serialize the most accurate tree"""
