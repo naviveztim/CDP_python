@@ -4,10 +4,10 @@ import os.path
 import timeit
 import sys
 import numpy as np
-from cdp_tsc.core.cdp import CDP
-from cdp_tsc.utils.logger import logger
-from cdp_tsc.utils.dataset import Dataset
-from cdp_tsc.utils.utils import process_dataset
+from cdp_ts.core.cdp import CDP
+from cdp_ts.utils.logger import logger
+from cdp_ts.utils.dataset import Dataset
+from cdp_ts.utils.utils import process_dataset
 
 
 def get_arguments() -> argparse.Namespace:

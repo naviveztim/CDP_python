@@ -4,10 +4,10 @@ import os.path
 import pickle
 import csv
 from collections import defaultdict
-from cdp_tsc.utils.utils import try_except, similarity_coefficient
-from cdp_tsc.utils.logger import logger
-from cdp_tsc.utils.dataset import Dataset
-from cdp_tsc.core.shapelet_classifier import ShapeletClassifier
+from cdp_ts.utils.utils import try_except, similarity_coefficient
+from cdp_ts.utils.logger import logger
+from cdp_ts.utils.dataset import Dataset
+from cdp_ts.core.shapelet_classifier import ShapeletClassifier
 
 # Filename of trained model - contains sequence of decision trees
 MODEL_FILENAME = 'cdp_model.pickle'

@@ -2,8 +2,8 @@
     shapelet that mostly separate two classes of time series"""
 import sys
 import numpy as np
-from cdp_tsc.utils.utils import assess_candidate_position
-from cdp_tsc.utils.dataset import Dataset
+from cdp_ts.utils.utils import assess_candidate_position
+from cdp_ts.utils.dataset import Dataset
 import numba
 from numba import NumbaWarning
 import warnings

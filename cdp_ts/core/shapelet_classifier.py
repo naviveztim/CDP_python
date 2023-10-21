@@ -2,12 +2,12 @@ import os
 from collections import Counter
 from itertools import chain, combinations, permutations
 import numpy as np
-from cdp_tsc.core.shapelet import Shapelet
-from cdp_tsc.core.pso import ShapeletsPso
-from cdp_tsc.utils.utils import subsequent_distance
-from cdp_tsc.utils.btree import BTree
-from cdp_tsc.utils.logger import logger
-from cdp_tsc.utils.dataset import Dataset
+from cdp_ts.core.shapelet import Shapelet
+from cdp_ts.core.pso import ShapeletsPso
+from cdp_ts.utils.utils import subsequent_distance
+from cdp_ts.utils.btree import BTree
+from cdp_ts.utils.logger import logger
+from cdp_ts.utils.dataset import Dataset
 
 
 class ShapeletClassifier:

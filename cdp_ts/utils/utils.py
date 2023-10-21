@@ -1,6 +1,6 @@
 from collections import Counter
 import numpy as np
-from cdp_tsc.utils.dataset import Dataset
+from cdp_ts.utils.dataset import Dataset
 import numba
 from numba import NumbaWarning
 import warnings

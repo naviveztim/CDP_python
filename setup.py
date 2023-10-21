@@ -1,5 +1,5 @@
 """A python implementation of Concatenated-Decision-Path method for time series classification."""
-import cdp_tsc
+import cdp_ts
 from setuptools import find_packages, setup
 
 
