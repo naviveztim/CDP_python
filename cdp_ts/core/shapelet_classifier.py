@@ -8,6 +8,7 @@ from cdp_ts.utils.utils import subsequent_distance
 from cdp_ts.utils.btree import BTree
 from cdp_ts.utils.logger import logger
 from cdp_ts.utils.dataset import Dataset
+import concurrent.futures
 
 
 class ShapeletClassifier:
@@ -291,14 +292,16 @@ class ShapeletClassifier:
         # Define trees to be created
         classifiers_file_names = [x for x in required_trees if x not in classification_trees]
 
-        # Create classification tree
-        for i, classifier_file_name in enumerate(classifiers_file_names):
-            if classifier_file_name:
-                classification_trees[classifier_file_name] = \
-                    self._create_and_train_tree(classes_in_combination=required_trees[classifier_file_name])
-                # Training progress
-                logger.info(f"Training classifier {i+1}/{len(classifiers_file_names)}")
-
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = {executor.submit(self._create_and_train_tree, required_trees[classifier_file_name]):
+                       classifier_file_name for classifier_file_name in classifiers_file_names}
+            for future in concurrent.futures.as_completed(futures):
+                classifier_file_name = futures[future]
+                try:
+                    result = future.result()
+                    classification_trees[classifier_file_name] = result
+                except Exception as e:
+                    print(f"An error occurred for name {classifier_file_name}: {e}")
 
 
 

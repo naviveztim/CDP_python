@@ -87,9 +87,6 @@ class CDP:
         # Load saved patterns
         self._load_patterns(os.path.join(self.model_folder, PATTERNS_FILE_NAME))
 
-        # Sanity check
-        for pattern in self.patterns:
-            logger.info(f'Index: {pattern[0]}, Pattern: {pattern[1]}')
 
     @try_except
     def fit(self, train_dataset: Dataset):
