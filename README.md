@@ -9,7 +9,7 @@ Python implementation of the CDP algorithm posses following advantages:
 - **very simple** to maintain (consists of 8 python files, spread in two folders)
 
 ### Installation 
-pip install cdp-tsc
+pip install cdp-ts
 
 ### Training & Testing 
 
