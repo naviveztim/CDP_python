@@ -25,14 +25,14 @@ TRAIN_DATASET_PATH = <<train filepath>>
 TEST_DATASET_PATH = <<test filepath>>
 DELIMITER = "\t"
 MODELS_FOLDER_PATH = <<model folder path>>
-COMPRESSION_FACTOR = <<1,2,3,4>>
+COMPRESSION_FACTOR = 1,2,3,4...
 NORMALIZE = True/False
 DERIVATIVE = True/False
 NUM_CLASSES_PER_TREE = 2
 NUM_TREES = <<some number of trees>>
 
 
-def train() -> CDP:
+def train():
     """ Demo function that shows creating and training of CDP model"""
 s
     # Obtain train dataset from 'ucr' type csv file
