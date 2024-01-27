@@ -1,6 +1,12 @@
 ## Python implementation of Concatenation Decision Paths (CDP)- fast and accurate method for time series classification 
 
-### Overview 
+## Overview 
+ CDP is a novel method for time-series classification using shapelets. The approach focuses on overcoming the limitations of traditional 
+ shapelet-based methods, primarily their slow training times, while maintaining high accuracy. Proposed algorithm 
+ involves training small decision trees and combining their decisions to form unique patterns for identifying time-series 
+ data. Method is tested on dataset from [UCR](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/))
+
+### Main characteristics 
 Python implementation of the CDP algorithm posses following advantages: 
 - **very fast** to (re)train (training time vary from seconds to minutes for datasets from [UCR](https://www.cs.ucr.edu/~eamonn/time_series_data_2018/))
 - produces **compact (~KB) models**, in comparison with large standard models (~100MB)  
