@@ -229,7 +229,7 @@ class ShapeletClassifier:
         num_class_indexes = len(class_indexes)
         num_allowed_indexes = self.num_trees * self.num_classes_per_tree // num_class_indexes
 
-        # Generate all possible combinations of 3 classes from the range 0-15
+        # Generate all possible combinations class_indexes, spread in num_classes_per_tree sets
         combs = list(combinations(class_indexes, self.num_classes_per_tree))
 
         # Filter the combinations to only keep those where each class appears equally
