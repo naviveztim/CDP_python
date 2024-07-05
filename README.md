@@ -17,6 +17,11 @@ Python implementation of the CDP algorithm posses following advantages:
 ### Installation 
 pip install cdp-ts
 
+### Donate
+If you like this project, consider supporting me by donating.
+
+[![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate/?hosted_button_id=E7U5FRCCUVNL6)
+
 ### Training & Testing 
 
 <pre>
