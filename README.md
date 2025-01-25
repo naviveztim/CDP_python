@@ -106,7 +106,7 @@ CDP model has very small training time- it vary from seconds to minutes for data
 Table below shows some elapsed training time and corresponding accuracy along with used hyper-parameters. 
 Also, Fig. 1 shows comparison of the CDP method in terms of accuracy with some state-of-the-art time series 
 classification method. 
-Note: Accuracies reported for Fig.1 were obtained by **[C# implementation](https://github.com/naviveztim/CDP_C_Sharp)** of CDP method (for questions and inquiries: cdp_project@outlook.com). 
+Note: Accuracies reported for Fig.1 were obtained by **[C# implementation](https://github.com/naviveztim/CDP_C_Sharp)** of CDP method (for more information: cdp-project.com). 
 Table 1 contain training time and accuracies obtained by python implementation of the CDP method and Table 2 corresponding performance parameters
 from C# implementation. 
 Present Python implementation does not use any acceleration techniques such as numba, or multiprocessing. 
@@ -174,8 +174,8 @@ More advanced classification methods such as Neural Networks, Random Forests or 
 for even more precise and fast classification, by taking produced decision patterns as input features
 to these methods. 
 
-### Contacts: 
-cdp_project@outlook.com
+### Website: 
+cdp-project.com
 
 ### References: 
 
